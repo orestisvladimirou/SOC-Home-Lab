@@ -1,0 +1,32 @@
+# Never publish authentication material or local environment secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+*.ppk
+id_rsa*
+id_ed25519*
+*credentials*
+*secrets*
+*.kdbx
+
+# Local captures, logs and machine images require separate review
+*.log
+*.pcap
+*.pcapng
+*.vhd
+*.vhdx
+*.vdi
+*.qcow2
+*.ova
+*.ovf
+*.iso
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
