@@ -21,6 +21,7 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
 | Wazuh server firewall hardening | Restricted SSH/dashboard to Windows and agent ports to monitored endpoint; verified API 55000 blocked from Windows and all services operational | [UFW assessment](security-hardening/wazuh-server-firewall.md) |
 | Vulnerability management — VM-001 | Assessed 101 Critical and 862 High active-kernel inventory records; investigated two RDMA CVEs and verified reversible modprobe mitigation; fixes remain outstanding | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) |
+| Vulnerability management — VM-002 | Wazuh server's running kernel evaluated; manager inventory has 718 local packages but only changed `hello` was indexed; security-update policy and five sample CVE exposures documented | [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) |
 
 ## Architecture at a glance
 
@@ -81,6 +82,16 @@ Wazuh identified **101 Critical** and **862 High** vulnerability inventory recor
 
 **This is an exposure-reduction measure, not a patch or proof that all reported vulnerabilities are resolved.**
 
+## Wazuh server vulnerability assessment — VM-002
+
+**[VM-002 — Wazuh server vulnerability, inventory synchronization and patch-policy investigation](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md)**
+
+The manager itself was added to vulnerability detection as agent `000`. Wazuh recorded **7,266 kernel-related vulnerability documents**, of which **2,982** pertained to its running `6.8.0-147-generic` image. Five sampled Critical CVEs were assessed against the VM's observed loaded modules, mounts, kernel configuration and services. Unused RDMA/Ceph/handshake components showed reduced apparent exposure, but kernel CVEs were **not** considered patched or ruled out.
+
+An inventory-publishing limitation was independently reproduced: the manager's local source and management databases held **718 packages** after a harmless `hello` diagnostic install, but the package index held **only that one newly changed package**; its historical packages remained absent. The test package was purged from Ubuntu, with removal from Wazuh **pending its next scheduled inventory scan** at the last observation.
+
+Ubuntu unattended security updating and both APT maintenance timers were enabled. The inspected configuration had no explicit automatic-reboot override; Ubuntu's documented default is off, though package updates may still restart affected services. See VM-002 for the full evidence trail, limitations and follow-up.
+
 ## Endpoint hardening
 
 The lab endpoint uses key-based SSH access, disabled SSH passwords and root login, a restricted SSH allow-list, limited MAC algorithms and connection settings, an authorized-use banner and disabled forwarding. UFW restricts inbound SSH on the internal lab interface to the Windows host.
@@ -114,7 +125,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
-| [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | VM-001 advisory evaluation, kernel assessment, modprobe mitigation, verification and residual risks |
+| [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
 | [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
@@ -142,6 +153,9 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [ ] Reassess VM-001 when relevant Ubuntu security patches become available and attach sanitized screenshots.
 - [x] Restrict Wazuh server exposure using UFW and verify management, agent, dashboard and API negative-control behavior.
 - [x] Verify server IPv6 UFW policy, empty IPv6 user-allow chain, and link-local address scope.
+- [x] Assess Wazuh server kernel-CVE exposure, unattended-update policy, and investigate local-to-indexer package mismatch (VM-002).
+- [ ] Verify `hello` removal reaches Wazuh inventories after the next scheduled package scan.
+- [ ] Resolve/backfill missing manager historical package index records when a safe supported method is established.
 - [ ] Independently test Default Switch and IPv6 management-port reachability.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
 
