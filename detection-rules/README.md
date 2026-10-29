@@ -51,6 +51,24 @@ The rule files expect compatible parent rule IDs and event fields. Confirm them 
 5. Verify **negative controls**, not just positive detection.
 6. Investigate benign triggers and potential false positives before enabling automated response.
 
+## Visual validation evidence
+
+The screenshots below are **cropped, high-contrast excerpts** of the lab's original Wazuh event views, with unrelated interface regions omitted.
+
+**FIM positive control — rule 100100, Level 10**
+
+![Custom FIM rule 100100 detecting the monitored configuration change](../evidence/fim-custom-positive.png)
+
+**Sudo positive control — rule 100101, Level 8**
+
+![Custom sudo rule 100101 identifying /etc/shadow reference](../evidence/sudo-custom-positive.png)
+
+**Sudo negative control — ordinary rule 5402, Level 3**
+
+![Normal sudo event for stat /etc/hosts without custom escalation](../evidence/sudo-custom-negative.png)
+
+The FIM negative-control result (two normal events and zero matches for rule 100100 on the unrelated control file) was observed during the test, but no separate screenshot of the zero-result query was captured.
+
 ## Limitations and future improvements
 
 - A rule matching an exact path or command argument will not cover every way to access or modify a sensitive file. For example, rule 100101 is **not** an exhaustive credential-access detector.
