@@ -90,12 +90,38 @@ No SSH authentication settings, Wazuh service configurations, or required servic
 
 **Not established or not yet tested:**
 
-- Whether the server's UFW `IPV6` option is enabled and the complete IPv6-specific filtering behavior. `sshd` and the API were listening on IPv6 before hardening, so IPv6 should receive separate validation.
+- Although the IPv6 default-deny policy and user-input chain were inspected (see below), an independent network-origin IPv6 reachability test has **not** been performed, and UFW's predefined exceptions still allow necessary protocol traffic.
 - Independent reachability tests **from the Default Switch (`eth1`)** and from other hosts.
 - Overall Wazuh server CIS compliance or CVE remediation; these are separate workstreams.
 - Resistance to compromise by a local privileged user who can alter firewall rules.
 
 The Wazuh API service continues listening at the process level; the control restricts remote TCP access using the host firewall. Default **allow outgoing** was retained to avoid breaking dependency or update traffic.
+
+## IPv6 firewall verification — October 29, 2026
+
+After UFW was enabled, the following read-only checks were performed on the Wazuh server:
+
+```bash
+grep '^IPV6=' /etc/default/ufw
+ip -6 address show
+sudo ip6tables -S INPUT
+sudo ip6tables -S ufw6-user-input
+sudo ip6tables -S ufw6-before-input
+```
+
+| Check | Observed result |
+| --- | --- |
+| `/etc/default/ufw` | `IPV6=yes` |
+| `eth0` | `fe80::215:5dff:fe0a:c01/64` — link-local only |
+| `eth1` | `fe80::215:5dff:fe0a:c02/64` — link-local only |
+| Globally scoped IPv6 address | None shown; loopback `::1/128` present |
+| IPv6 `INPUT` chain | `-P INPUT DROP` with UFW chain dispatch |
+| `ufw6-user-input` | Chain present with **no user-defined IPv6 allow rules** |
+| `ufw6-before-input` | Standard exceptions for loopback, established/related sessions, ICMPv6 and selected DHCPv6/multicast UDP traffic |
+
+**Assessment:** No observed IPv6 firewall rule explicitly allows new inbound TCP connections to SSH (22), HTTPS (443) or the Wazuh API (55000). The default `INPUT DROP` policy restricts other unsolicited incoming traffic. Essential protocol exceptions are expected, not indications that all IPv6 is blocked. The absence of a global IPv6 address reduces routable exposure, but the link-local interfaces are still valid on their respective network segments.
+
+**Limitations:** This is a configuration inspection rather than an external IPv6 connection test. The `ufw6-before-input` rules allow certain local-network traffic such as DHCPv6 and multicast; the claim is limited to the inspected management TCP ports, not every kind of IPv6 packet.
 
 ## Safety and recovery notes
 
@@ -105,7 +131,7 @@ For authorized troubleshooting from the VM console, `sudo ufw status verbose` an
 
 ## Follow-up
 
-1. Verify `grep '^IPV6=' /etc/default/ufw` and record the server's scoped IPv6 addresses.
+1. Optionally validate link-local IPv6 management-port reachability from an authorized peer, without disrupting current access.
 2. Consider independently testing the Default Switch network interface and agent enrollment policy.
 3. Check whether Wazuh API access is required remotely for future integrations before changing the firewall policy.
 4. Add cropped, sanitized screenshots of UFW status, agent status, and the negative-control PowerShell test to the evidence gallery.
