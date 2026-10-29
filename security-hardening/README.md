@@ -65,7 +65,7 @@ The lab configured **deny incoming / allow outgoing** and restricted inbound ser
 
 **Verified after activation:** New Windows SSH access and the Brave dashboard worked; manager, indexer, dashboard and Filebeat remained active; agent `001` remained active; and Windows `Test-NetConnection` to the Wazuh management API at 55000/TCP returned `TcpTestSucceeded: False`.
 
-This is **network exposure reduction**, not a CVE patch. The server's IPv6 UFW configuration and Default Switch reachability have not yet received independent post-change verification.
+This is **network exposure reduction**, not a CVE patch. Subsequent **IPv6 firewall rule inspection** verified `IPV6=yes`, default `INPUT DROP`, empty `ufw6-user-input` and link-local-only interface IPv6 addresses. UFW's standard IPv6 protocol allowances remain. **Independent reachability checks** from other IPv6 peers and across the Default Switch have not yet been performed.
 
 See the [full firewall assessment, exact rules, functional tests and limitations](wazuh-server-firewall.md).
 
