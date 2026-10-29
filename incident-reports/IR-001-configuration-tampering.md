@@ -85,12 +85,21 @@ The restored hash matches the original exactly. This supports **byte-for-byte re
 
 ## 7. Evidence index
 
-Screenshots are intentionally **not included yet**. Before publishing, review images for sensitive information and place approved, sanitized exports in [`evidence/`](../evidence/README.md):
+These are **cropped, high-contrast excerpts** of user-supplied Wazuh and Ubuntu screenshots. The changes shown are **authorized lab activity**, not a real intrusion.
 
-- Original rule `100100` Level 10 alert with before/after SHA-256.
-- Endpoint output showing simulated changed value and relevant `sudo` entries.
-- Recovery rule `100100` alert with restored SHA-256.
-- Terminal output confirming the known-good contents and hash.
+### 7.1 Initial detection — rule 100100
+
+![Wazuh FIM Level 10 alert for the simulated configuration change](../evidence/fim-custom-positive.png)
+
+### 7.2 Recovery detection — rule 100100
+
+![Wazuh FIM alert confirming recovery modification and restored SHA-256](../evidence/ir001-recovery.png)
+
+### 7.3 Endpoint recovery verification
+
+![Ubuntu terminal confirming restored configuration and SHA-256](../evidence/ir001-terminal-hash.png)
+
+The recovered SHA-256 matched the original known-good value recorded in the initial alert. See the [evidence gallery](../evidence/README.md) for context and sanitization notes.
 
 ## 8. Closure
 
