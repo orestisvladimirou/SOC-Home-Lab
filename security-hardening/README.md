@@ -57,6 +57,18 @@ OpenSSL verified the certificate chain, IP and matching public/private keys. The
 
 **Security caveat:** A locally trusted CA can issue certificates for other sites too. Protect the CA signing key, never publish it, and remove the trust when retiring the lab. Private lab access does not substitute for firewalling and access controls.
 
+## Wazuh server firewall hardening
+
+The Wazuh server initially had **UFW inactive**, with SSH (22/TCP), dashboard HTTPS (443/TCP), agent transport (1514/TCP), agent enrollment (1515/TCP), and management API (55000/TCP) listening on non-loopback addresses. OpenSearch 9200/9300 were loopback-bound.
+
+The lab configured **deny incoming / allow outgoing** and restricted inbound services to two known peers on the internal `eth0` interface: Windows `10.77.77.1` for SSH and HTTPS, and the monitored Ubuntu endpoint `10.77.77.30` for agent transport and enrollment. UFW was enabled and its four active rules inspected.
+
+**Verified after activation:** New Windows SSH access and the Brave dashboard worked; manager, indexer, dashboard and Filebeat remained active; agent `001` remained active; and Windows `Test-NetConnection` to the Wazuh management API at 55000/TCP returned `TcpTestSucceeded: False`.
+
+This is **network exposure reduction**, not a CVE patch. The server's IPv6 UFW configuration and Default Switch reachability have not yet received independent post-change verification.
+
+See the [full firewall assessment, exact rules, functional tests and limitations](wazuh-server-firewall.md).
+
 ## Future priorities
 
 - Assess overall CIS failures by actual risk rather than chasing the score.
