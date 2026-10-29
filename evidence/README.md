@@ -70,7 +70,7 @@ The [VM-002 case study](../vulnerability-management/VM-002-wazuh-server-vulnerab
 - Wazuh API: **717** existing manager packages retrievable.
 - Inventory index: **0** initial manager package documents; **1** after a new `hello` change, while endpoint `001` had **714**.
 - Vulnerability index: **7,266** findings for each agent, split between two installed kernel image versions; **101 Critical / 862 High** on the running kernel.
-- The diagnostic `hello` package was purged from Ubuntu. Its Wazuh inventory removal remained **unverified**, since the configured hourly Syscollector scan had not run again at last observation.
+- The diagnostic `hello` package was purged from Ubuntu. The indexer subsequently returned **0** `hello` records; the 13:10:16–13:10:36 UTC completed Syscollector scan was followed by **717 packages / 0 `hello`** in both the source and manager local databases. The **removal verification passed**.
 - Ubuntu automatic security updating enabled, with no explicit automatic reboot policy found. Five sample kernel CVEs triaged against runtime evidence; no CVE was claimed patched.
 
 Terminal screenshots, Dev Tools queries, and package-manager output were inspected during this exercise, but **are not yet committed as sanitized VM-002 images**. Suggested future evidence:
