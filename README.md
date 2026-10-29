@@ -17,7 +17,7 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Custom detection 2 | **Rule 100101**: Level 8 privileged command referencing `/etc/shadow`; positive and negative tests passed | [XML](detection-rules/soc_lab_sudo_rules.xml) |
 | SSH hardening | **20/20 passing SSH-related** CIS Ubuntu 24.04 checks (not the overall CIS score) | [Hardening notes](security-hardening/README.md) |
 | Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
-| Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts just 8.7 seconds apart; verified recovery, with local journal evidence gap explicitly noted | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
+| Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
 
 ## Architecture at a glance
@@ -69,7 +69,7 @@ The case documents **alert triage, timeline reconstruction, evidence correlation
 
 **[IR-002 — Multi-alert investigation and recovery](incident-reports/IR-002-correlated-privileged-activity.md)**
 
-A controlled sequence produced a **Level 8** alert for a privileged command referencing `/etc/shadow`, followed **8.702 seconds** later by a **Level 10** FIM alert for changes to a harmless test configuration. The recovery alert independently verified that the file's SHA-256 returned to its known-good value. The incident report includes a justified **no-isolation** decision for this authorized simulation, as well as a documented gap: the exercise-specific `sudo` journal evidence has not yet been archived or independently reviewed.
+A controlled sequence produced a **Level 8** alert for a privileged command referencing `/etc/shadow`, followed **8.702 seconds** later by a **Level 10** FIM alert for changes to a harmless test configuration. The recovery alert independently verified that the file's SHA-256 returned to its known-good value. The incident report correlates the alerts with endpoint `sudo` journal entries identifying the account and command execution, records a justified **no-isolation** decision for this authorized simulation, and verifies recovery using the known-good SHA-256.
 
 ## Endpoint hardening
 
@@ -117,8 +117,9 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
 - [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.
-- [x] Complete an IR-002 multi-alert correlation and recovery exercise (with journal evidence gap noted).
-- [ ] Archive sanitized IR-002 screenshot and local sudo-log evidence.
+- [x] Complete IR-002 multi-alert correlation, command-level `sudo` log corroboration, and hash-verified recovery.
+- [x] Document incident-specific IR-002 `sudo` log evidence in the incident report.
+- [ ] Add selected sanitized IR-002 screenshots to the evidence gallery.
 - [ ] Export an additional standalone network diagram.
 - [ ] Investigate and prioritize real vulnerability findings.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
