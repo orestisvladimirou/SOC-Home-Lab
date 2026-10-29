@@ -37,7 +37,7 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 
 A second authorized exercise generated rule `100101` (Level 8) followed **8.702 seconds later** by rule `100100` (Level 10) on the same endpoint. A subsequent FIM alert recorded a recovery modification and the known-good SHA-256. See [IR-002 — correlated privileged activity and configuration tampering](../incident-reports/IR-002-correlated-privileged-activity.md).
 
-The IR-002 images were supplied during the exercise but are **not committed to this repository yet**. We still need sanitized copies of the two-alert event view and the recovery alert, plus an incident-specific `sudo` journal excerpt before claiming journal-level actor correlation for IR-002.
+The **IR-002 event overview, recovery alert, and endpoint `sudo` journal screenshots were all reviewed in the conversation**, but their image files are **not committed to this repository yet**. A timestamped, sanitized transcription of the journal's relevant lines has been added to the [IR-002 report](../incident-reports/IR-002-correlated-privileged-activity.md). It confirms that `endpointadmin` used the same `pts/1` session to run the test commands with elevated privileges. We should still add cropped and sanitized IR-002 screenshots as visual evidence later.
 
 ## Interpreting the evidence
 
