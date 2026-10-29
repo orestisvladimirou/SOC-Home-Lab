@@ -69,6 +69,14 @@ This is **network exposure reduction**, not a CVE patch. Subsequent **IPv6 firew
 
 See the [full firewall assessment, exact rules, functional tests and limitations](wazuh-server-firewall.md).
 
+## Wazuh server update policy and software exposure
+
+The [VM-002 Wazuh server assessment](../vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) recorded enabled Ubuntu security-update maintenance (`APT::Periodic` settings `1`, `unattended-upgrades` installed, both APT timers enabled). Allowed origins included Ubuntu release/security pockets and optional ESM security repositories. No explicit automatic-reboot setting appeared, so Ubuntu's documented default is `false`; **automatic service restarts may still occur during package updates**.
+
+At assessment time, no upgrades were available from configured APT repositories. The running server kernel was `6.8.0-147-generic`, with `6.8.0-139-generic` retained as a potential recovery fallback. Wazuh logged many kernel vulnerability documents, but these were assessed as **findings requiring per-advisory validation** rather than verified remote exploitability.
+
+Manager vulnerability detection was enabled through `local_internal_options.conf`, but the server's **historical package index remains incomplete**, even though the local databases collected package records and a newly installed test package was indexed. See VM-002 for reproducible query results, residual risks and the pending post-removal inventory scan.
+
 ## Future priorities
 
 - Assess overall CIS failures by actual risk rather than chasing the score.
