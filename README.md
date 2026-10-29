@@ -19,6 +19,7 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
 | Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
+| Wazuh server firewall hardening | Restricted SSH/dashboard to Windows and agent ports to monitored endpoint; verified API 55000 blocked from Windows and all services operational | [UFW assessment](security-hardening/wazuh-server-firewall.md) |
 | Vulnerability management — VM-001 | Assessed 101 Critical and 862 High active-kernel inventory records; investigated two RDMA CVEs and verified reversible modprobe mitigation; fixes remain outstanding | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) |
 
 ## Architecture at a glance
@@ -86,6 +87,12 @@ The lab endpoint uses key-based SSH access, disabled SSH passwords and root logi
 
 After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An earlier **overall** CIS scan was only **51%**, so the SSH subset result must not be mistaken for full system compliance. See [security-hardening notes](security-hardening/README.md).
 
+## Wazuh server network exposure reduction
+
+The Wazuh server originally had **UFW inactive** and management listeners including 22, 443, and 55000/TCP on network-facing addresses. UFW was enabled with an **inbound deny** policy and four host- and interface-limited exceptions for Windows SSH/dashboard access and Ubuntu endpoint agent transport/enrollment. The existing Wazuh agent, four Wazuh services, dashboard and Windows SSH connectivity were all verified afterwards. A Windows-origin negative-control connection to the API on **55000/TCP** failed as intended.
+
+See the [Wazuh server UFW assessment](security-hardening/wazuh-server-firewall.md). The control reduces network exposure; it does not remediate Wazuh software CVEs, and server IPv6 filtering and Default Switch reachability require separate assessment.
+
 ## Selected visual evidence
 
 These are sanitized, cropped screenshots of **real controlled lab test results**, with no new events fabricated:
@@ -106,7 +113,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | [`architecture/`](architecture/README.md) | Logical topology, host roles, network and monitoring flow |
 | [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
-| [`security-hardening/`](security-hardening/README.md) | SSH/CIS, firewall and TLS configuration evidence |
+| [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
 | [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | VM-001 advisory evaluation, kernel assessment, modprobe mitigation, verification and residual risks |
 | [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
@@ -133,6 +140,8 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [ ] Export an additional standalone network diagram.
 - [x] Investigate two selected RDMA CVEs, validate the current kernel and document VM-001 exposure mitigation.
 - [ ] Reassess VM-001 when relevant Ubuntu security patches become available and attach sanitized screenshots.
+- [x] Restrict Wazuh server exposure using UFW and verify management, agent, dashboard and API negative-control behavior.
+- [ ] Validate Wazuh server IPv6 firewall behavior and Default Switch reachability.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
 
 ---
