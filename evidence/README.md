@@ -33,6 +33,12 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 
 ![Ubuntu terminal verifying restored configuration and SHA-256](ir001-terminal-hash.png)
 
+## IR-002 — correlated alert evidence to be archived
+
+A second authorized exercise generated rule `100101` (Level 8) followed **8.702 seconds later** by rule `100100` (Level 10) on the same endpoint. A subsequent FIM alert recorded a recovery modification and the known-good SHA-256. See [IR-002 — correlated privileged activity and configuration tampering](../incident-reports/IR-002-correlated-privileged-activity.md).
+
+The IR-002 images were supplied during the exercise but are **not committed to this repository yet**. We still need sanitized copies of the two-alert event view and the recovery alert, plus an incident-specific `sudo` journal excerpt before claiming journal-level actor correlation for IR-002.
+
 ## Interpreting the evidence
 
 - The **20/20** result applies **only to the displayed SSH-specific subset** of CIS checks. It is **not the overall CIS compliance score**.
