@@ -39,6 +39,17 @@ A second authorized exercise generated rule `100101` (Level 8) followed **8.702 
 
 The **IR-002 event overview, recovery alert, and endpoint `sudo` journal screenshots were all reviewed in the conversation**, but their image files are **not committed to this repository yet**. A timestamped, sanitized transcription of the journal's relevant lines has been added to the [IR-002 report](../incident-reports/IR-002-correlated-privileged-activity.md). It confirms that `endpointadmin` used the same `pts/1` session to run the test commands with elevated privileges. We should still add cropped and sanitized IR-002 screenshots as visual evidence later.
 
+## VM-001 — kernel vulnerability assessment (pending screenshot publication)
+
+The lab identified **101 Critical** and **862 High** Wazuh vulnerability inventory records for the running Ubuntu kernel `6.8.0-147-generic`. The [VM-001 case study](../vulnerability-management/VM-001-rdma-kernel-exposure.md) documents the package checks, the RDMA module exposure assessment and the temporary `modprobe` configuration for `siw` and `rtrs-server`.
+
+The VM-001 vulnerability dashboard and terminal verification screenshots were reviewed during the exercise but **have not yet been committed to GitHub**. Suggested sanitized evidence:
+- `vm001-active-kernel-findings.png` — Critical/High Wazuh inventory summary for the running kernel.
+- `vm001-module-availability.png` — Kernel configuration and module files, without unrelated terminal content.
+- `vm001-mitigation-verification.png` — Dry-run `install /bin/false` output and `lsmod` showing both targeted modules unloaded.
+
+Do not label a reduced vulnerability count or a configured module restriction as a kernel patch.
+
 ## Interpreting the evidence
 
 - The **20/20** result applies **only to the displayed SSH-specific subset** of CIS checks. It is **not the overall CIS compliance score**.
