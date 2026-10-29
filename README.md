@@ -70,6 +70,19 @@ The lab endpoint uses key-based SSH access, disabled SSH passwords and root logi
 
 After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An earlier **overall** CIS scan was only **51%**, so the SSH subset result must not be mistaken for full system compliance. See [security-hardening notes](security-hardening/README.md).
 
+## Selected visual evidence
+
+These are sanitized, cropped screenshots of **real controlled lab test results**, with no new events fabricated:
+
+- [Wazuh CIS SSH assessment — 20/20 passing checks](evidence/ssh-cis-20-of-20.png)
+- [Custom FIM rule 100100 — Level 10 positive detection](evidence/fim-custom-positive.png)
+- [Custom sudo rule 100101 — Level 8 positive detection](evidence/sudo-custom-positive.png)
+- [Custom sudo negative control — normal Level 3 event](evidence/sudo-custom-negative.png)
+- [IR-001 recovery alert and restored hash](evidence/ir001-recovery.png)
+- [IR-001 terminal verification of known-good value](evidence/ir001-terminal-hash.png)
+
+See the [evidence gallery and context notes](evidence/README.md) for all six images.
+
 ## Repository guide
 
 | Folder | Contents |
@@ -78,7 +91,7 @@ After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An ear
 | [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Evidence-based incident report IR-001 |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, firewall and TLS configuration evidence |
-| [`evidence/`](evidence/README.md) | Screenshot plan and sanitization checklist; no screenshots committed yet |
+| [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
 ## Safety and limitations
@@ -86,7 +99,7 @@ After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An ear
 - All experiments were performed on personally controlled VMs and **test files**, not production infrastructure.
 - Rule matches raise investigative signals, not proof of malicious intent. The custom detections have **limited** scope and require further tuning before production use.
 - No SSH keys, CA private keys, passwords, tokens or VM disk images are included in the repository.
-- Screenshots are not yet published; an [evidence index](evidence/README.md) records what should be reviewed and sanitized first.
+- Reviewed, cropped screenshots are included in the [evidence gallery](evidence/README.md).
 - Wazuh's CIS score and vulnerability counts are assessment outputs, not a substitute for manual risk assessment or evidence of exploitable compromise.
 
 ## Planned next steps
@@ -96,7 +109,7 @@ After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An ear
 - [x] Create **two** custom detections with positive and negative controls.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
-- [ ] Add sanitized screenshots and an exportable network diagram.
+- [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.\n- [ ] Export an additional standalone network diagram.
 - [ ] Run a multi-event incident investigation with a defensible response decision.
 - [ ] Investigate and prioritize real vulnerability findings.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
