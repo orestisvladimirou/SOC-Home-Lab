@@ -62,6 +62,26 @@ Source screenshots were reviewed during this exercise but **are not yet committe
 
 Do not claim API reachability has been tested from every host or that server IPv6 filtering is fully validated.
 
+## VM-002 — Wazuh server package inventory and vulnerability triage (documented, screenshots pending)
+
+The [VM-002 case study](../vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) records:
+
+- Manager agent `000`: **717** locally collected packages initially; **718** after the controlled `hello` installation.
+- Wazuh API: **717** existing manager packages retrievable.
+- Inventory index: **0** initial manager package documents; **1** after a new `hello` change, while endpoint `001` had **714**.
+- Vulnerability index: **7,266** findings for each agent, split between two installed kernel image versions; **101 Critical / 862 High** on the running kernel.
+- The diagnostic `hello` package was purged from Ubuntu. Its Wazuh inventory removal remained **unverified**, since the configured hourly Syscollector scan had not run again at last observation.
+- Ubuntu automatic security updating enabled, with no explicit automatic reboot policy found. Five sample kernel CVEs triaged against runtime evidence; no CVE was claimed patched.
+
+Terminal screenshots, Dev Tools queries, and package-manager output were inspected during this exercise, but **are not yet committed as sanitized VM-002 images**. Suggested future evidence:
+
+- `vm002-local-vs-indexed-packages.png` — local 718 vs indexed 1 for manager `000`.
+- `vm002-kernel-finding-distribution.png` — scanner Critical/High figures separated by running versus old kernel.
+- `vm002-sample-cve-triage.png` — Wazuh sample advisories and module/mount checks.
+- `vm002-unattended-upgrades.png` — permitted origins, enabled timers and no explicit reboot override.
+
+**Limitations:** An empty package index does not negate package data in local Wazuh databases. CVE counts do not prove exploitability. Screenshots above are *proposed filenames*, not links to files currently in this repository.
+
 ## Interpreting the evidence
 
 - The **20/20** result applies **only to the displayed SSH-specific subset** of CIS checks. It is **not the overall CIS compliance score**.
