@@ -19,6 +19,7 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
 | Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
+| Vulnerability management — VM-001 | Assessed 101 Critical and 862 High active-kernel inventory records; investigated two RDMA CVEs and verified reversible modprobe mitigation; fixes remain outstanding | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) |
 
 ## Architecture at a glance
 
@@ -71,6 +72,14 @@ The case documents **alert triage, timeline reconstruction, evidence correlation
 
 A controlled sequence produced a **Level 8** alert for a privileged command referencing `/etc/shadow`, followed **8.702 seconds** later by a **Level 10** FIM alert for changes to a harmless test configuration. The recovery alert independently verified that the file's SHA-256 returned to its known-good value. The incident report correlates the alerts with endpoint `sudo` journal entries identifying the account and command execution, records a justified **no-isolation** decision for this authorized simulation, and verifies recovery using the known-good SHA-256.
 
+## Vulnerability management — VM-001
+
+**[VM-001 — Linux kernel RDMA vulnerability assessment and temporary mitigation](vulnerability-management/VM-001-rdma-kernel-exposure.md)**
+
+Wazuh identified **101 Critical** and **862 High** vulnerability inventory records against the **currently running** `6.8.0-147-generic` kernel. The assessment checked the package state against APT, examined the availability and runtime loading status of the `siw` and `rtrs-server` RDMA modules, and documented the two selected CVEs against official Ubuntu advisories. With no relevant kernel upgrade offered by configured repositories, the lab added a reversible `modprobe` restriction for these **unused modules**. Dry-run output and `lsmod` verified the control's expected behavior and that the targeted modules remain unloaded.
+
+**This is an exposure-reduction measure, not a patch or proof that all reported vulnerabilities are resolved.**
+
 ## Endpoint hardening
 
 The lab endpoint uses key-based SSH access, disabled SSH passwords and root login, a restricted SSH allow-list, limited MAC algorithms and connection settings, an authorized-use banner and disabled forwarding. UFW restricts inbound SSH on the internal lab interface to the Windows host.
@@ -98,6 +107,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, firewall and TLS configuration evidence |
+| [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | VM-001 advisory evaluation, kernel assessment, modprobe mitigation, verification and residual risks |
 | [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
@@ -121,7 +131,8 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [x] Document incident-specific IR-002 `sudo` log evidence in the incident report.
 - [ ] Add selected sanitized IR-002 screenshots to the evidence gallery.
 - [ ] Export an additional standalone network diagram.
-- [ ] Investigate and prioritize real vulnerability findings.
+- [x] Investigate two selected RDMA CVEs, validate the current kernel and document VM-001 exposure mitigation.
+- [ ] Reassess VM-001 when relevant Ubuntu security patches become available and attach sanitized screenshots.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
 
 ---
