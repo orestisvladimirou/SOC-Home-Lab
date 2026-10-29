@@ -75,7 +75,7 @@ The [VM-002 Wazuh server assessment](../vulnerability-management/VM-002-wazuh-se
 
 At assessment time, no upgrades were available from configured APT repositories. The running server kernel was `6.8.0-147-generic`, with `6.8.0-139-generic` retained as a potential recovery fallback. Wazuh logged many kernel vulnerability documents, but these were assessed as **findings requiring per-advisory validation** rather than verified remote exploitability.
 
-Manager vulnerability detection was enabled through `local_internal_options.conf`, but the server's **historical package index remains incomplete**, even though the local databases collected package records and a newly installed test package was indexed. See VM-002 for reproducible query results, residual risks and the pending post-removal inventory scan.
+Manager vulnerability detection was enabled through `local_internal_options.conf`, but the server's **historical package index remains incomplete**, even though the local databases collected package records and newly installed test package `hello` was indexed. The package was subsequently removed, with deletion confirmed in the indexer and both local databases after the next Syscollector scan. See VM-002 for reproducible results and remaining historical indexing risk.
 
 ## Future priorities
 
