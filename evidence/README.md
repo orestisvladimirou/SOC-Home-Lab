@@ -50,6 +50,18 @@ The VM-001 vulnerability dashboard and terminal verification screenshots were re
 
 Do not label a reduced vulnerability count or a configured module restriction as a kernel patch.
 
+## Wazuh server firewall hardening (pending screenshot publication)
+
+The [Wazuh server UFW assessment](../security-hardening/wazuh-server-firewall.md) documents the **active deny-inbound policy** and the four explicit host-scoped inbound allowances (SSH and HTTPS from Windows, agent transport and enrollment from the Ubuntu endpoint). After enabling the firewall, Windows SSH and the Brave dashboard worked, agent `001` remained **Active**, all four Wazuh server services remained **active**, and a Windows PowerShell connection attempt to `10.77.77.10:55000` returned `TcpTestSucceeded: False`.
+
+Source screenshots were reviewed during this exercise but **are not yet committed as sanitized portfolio images**. Suitable future captures:
+
+- `wazuh-server-ufw-active.png` — active policy and four explicit rules.
+- `wazuh-server-agent-active.png` — manager-reported agent `001` as Active.
+- `wazuh-api-negative-control.png` — Windows `Test-NetConnection` failure on port 55000.
+
+Do not claim API reachability has been tested from every host or that server IPv6 filtering is fully validated.
+
 ## Interpreting the evidence
 
 - The **20/20** result applies **only to the displayed SSH-specific subset** of CIS checks. It is **not the overall CIS compliance score**.
