@@ -37,6 +37,12 @@ The endpoint uses `/etc/ssh/sshd_config.d/10-soc-lab-hardening.conf` and has an 
 - Fresh key-based SSH sessions from Windows were tested **before** closing working sessions.
 - Wazuh SCA was refreshed following agent restarts, and the final SSH filtered view showed **20/20 passed**.
 
+### SSH assessment screenshot
+
+The [sanitized SSH-check screenshot](../evidence/ssh-cis-20-of-20.png) shows **20 passed results in the `sshd`-filtered subset**, not the entire CIS benchmark.
+
+![Wazuh CIS assessment showing 20 of 20 SSH checks passed](../evidence/ssh-cis-20-of-20.png)
+
 ## UFW firewall
 
 UFW was active on the endpoint with default **deny incoming** and **allow outgoing**. The rule permitting SSH on `eth0` limited its source to the Windows lab host (`10.77.77.1`). Wazuh agent telemetry and SSH administration were verified after enabling the firewall.
