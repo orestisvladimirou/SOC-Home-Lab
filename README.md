@@ -2,7 +2,7 @@
 
 **Hands-on cybersecurity portfolio project** | Windows Hyper-V · Ubuntu Server 24.04.5 LTS · Wazuh 4.14.9 · Linux security monitoring
 
-This lab demonstrates how I deployed a small security monitoring environment, investigated generated alerts, wrote and tested custom Wazuh detection rules, hardened an Ubuntu endpoint against CIS benchmark checks and carried out a documented incident-response exercise.
+This lab demonstrates how I deployed a small security monitoring environment, investigated generated alerts, wrote and tested custom Wazuh detection rules, hardened an Ubuntu endpoint against CIS benchmark checks and carried out two documented incident-response exercises.
 
 > **Scope:** All attack simulations and configuration changes were authorized activities in an isolated-purpose home lab. No real-world compromise or malicious actor is claimed. Work is ongoing.
 
@@ -16,7 +16,8 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Custom detection 1 | **Rule 100100**: Level 10 sensitive-file change; positive and negative live tests passed | [XML](detection-rules/soc_lab_fim_rules.xml) |
 | Custom detection 2 | **Rule 100101**: Level 8 privileged command referencing `/etc/shadow`; positive and negative tests passed | [XML](detection-rules/soc_lab_sudo_rules.xml) |
 | SSH hardening | **20/20 passing SSH-related** CIS Ubuntu 24.04 checks (not the overall CIS score) | [Hardening notes](security-hardening/README.md) |
-| Incident response | **IR-001:** detected simulated configuration tampering, correlated `sudo` activity, restored original content and verified the SHA-256 | [Incident report](incident-reports/IR-001-configuration-tampering.md) |
+| Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
+| Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts just 8.7 seconds apart; verified recovery, with local journal evidence gap explicitly noted | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
 
 ## Architecture at a glance
@@ -64,6 +65,12 @@ A harmless test configuration changed from `security_mode=normal` to `security_m
 
 The case documents **alert triage, timeline reconstruction, evidence correlation, a justified containment decision and recovery**. It is an **authorized simulation**, not an actual breach.
 
+### IR-002 — Correlated privileged activity and configuration tampering
+
+**[IR-002 — Multi-alert investigation and recovery](incident-reports/IR-002-correlated-privileged-activity.md)**
+
+A controlled sequence produced a **Level 8** alert for a privileged command referencing `/etc/shadow`, followed **8.702 seconds** later by a **Level 10** FIM alert for changes to a harmless test configuration. The recovery alert independently verified that the file's SHA-256 returned to its known-good value. The incident report includes a justified **no-isolation** decision for this authorized simulation, as well as a documented gap: the exercise-specific `sudo` journal evidence has not yet been archived or independently reviewed.
+
 ## Endpoint hardening
 
 The lab endpoint uses key-based SSH access, disabled SSH passwords and root login, a restricted SSH allow-list, limited MAC algorithms and connection settings, an authorized-use banner and disabled forwarding. UFW restricts inbound SSH on the internal lab interface to the Windows host.
@@ -89,7 +96,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | --- | --- |
 | [`architecture/`](architecture/README.md) | Logical topology, host roles, network and monitoring flow |
 | [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
-| [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Evidence-based incident report IR-001 |
+| [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, firewall and TLS configuration evidence |
 | [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
@@ -109,8 +116,10 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [x] Create **two** custom detections with positive and negative controls.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
-- [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.\n- [ ] Export an additional standalone network diagram.
-- [ ] Run a multi-event incident investigation with a defensible response decision.
+- [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.
+- [x] Complete an IR-002 multi-alert correlation and recovery exercise (with journal evidence gap noted).
+- [ ] Archive sanitized IR-002 screenshot and local sudo-log evidence.
+- [ ] Export an additional standalone network diagram.
 - [ ] Investigate and prioritize real vulnerability findings.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
 
