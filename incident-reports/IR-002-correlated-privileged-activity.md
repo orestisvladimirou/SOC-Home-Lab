@@ -4,7 +4,7 @@
 | --- | --- |
 | Case ID | `IR-002` |
 | Classification | **Authorized, simulated SOC incident** — no verified compromise |
-| Status | **Recovery verified**; local journal corroboration not yet archived |
+| Status | **Closed — Recovery and local command attribution verified** |
 | Endpoint | `soc-endpoint`, Wazuh agent `001`, lab IP `10.77.77.30` |
 | Monitoring | Wazuh 4.14.9; `journald` sudo events and real-time file integrity monitoring (FIM) |
 | Rules | `100101` (Level 8) and `100100` (Level 10) |
@@ -19,7 +19,7 @@ This authorized lab scenario tested a short sequence of events that would warran
 2. Approximately **8.7 seconds** later, modification of a designated test configuration file generated custom rule **100100**, Level **10**.
 3. The harmless test file was returned to its previously established known-good contents. A further Wazuh FIM alert recorded the recovery modification, including the restored SHA-256, which matched the established original.
 
-These alerts demonstrate **time-correlated observations**, not proof of a common attacker, credential theft, or a causal relationship between the two events. Both actions were part of the lab exercise. No actual system security setting was disabled.
+These alerts demonstrate **time-correlated observations**, not proof of credential theft or a causal relationship between the two operations. The endpoint's own `sudo` journal independently corroborated that **the same lab account (`endpointadmin`) executed both commands as root** on `pts/1`. This identifies the authenticated account and session, not a real-world individual. Both operations were part of the authorized exercise; no actual system security setting was disabled.
 
 ## 2. Detection and timeline
 
@@ -27,9 +27,9 @@ These alerts demonstrate **time-correlated observations**, not proof of a common
 
 | Dashboard time, October 29, 2026 | Observation | Evidence status |
 | --- | --- | --- |
-| **02:07:23.604** | Rule `100101`, Level 8 — `/usr/bin/stat /etc/shadow` appeared on `soc-endpoint`. | Confirmed in Wazuh events overview |
-| **02:07:32.306** | Rule `100100`, Level 10 — `critical-config.conf` modified on the same endpoint. | Confirmed in Wazuh events overview |
-| **02:10:03.755** | Rule `100100`, Level 10 — another FIM modification event for `critical-config.conf` during recovery. | Confirmed in Wazuh event detail |
+| **02:07:23.604** | Rule `100101`, Level 8 — `/usr/bin/stat /etc/shadow` appeared on `soc-endpoint` (sudo logged at 00:07:22 UTC). | Confirmed by Wazuh and endpoint `sudo` journal |
+| **02:07:32.306** | Rule `100100`, Level 10 — `critical-config.conf` modified (sudo `tee` logged at 00:07:32 UTC). | Confirmed by Wazuh and endpoint `sudo` journal |
+| **02:10:03.755** | Rule `100100`, Level 10 — FIM modification during recovery (sudo `tee` logged at 00:10:03 UTC). | Confirmed by Wazuh and endpoint `sudo` journal |
 
 **Alert spacing:** The two initial alerts are **8.702 seconds** apart. Three older matching alerts also appeared in the same hour-long query; these were excluded from the IR-002 sequence as belonging to prior exercises.
 
@@ -42,7 +42,25 @@ printf 'security_mode=disabled\nir002_case=simulated\n' | sudo tee /opt/soc-fim-
 
 `stat` obtains **metadata only** and does not read or exfiltrate password hashes. The other command modified only a synthetic test file in the FIM directory.
 
-**Evidence limitation:** The Wazuh alert overview supports the timing, host, and rule correlation; the incident-specific `sudo journalctl` command output has not yet been provided for independent review in this report. Therefore, the specific `sudo` account and session attribution for **IR-002** remain **not independently corroborated by archived journal evidence**. Previous incident IR-001 included local journal corroboration, but that cannot be substituted for IR-002.
+### Local command-level corroboration
+
+The incident-specific endpoint journal was inspected with:
+
+```bash
+sudo journalctl -t sudo --since "4 hours ago" --no-pager | grep -E '(/etc/shadow|critical-config\.conf)' | tail -n 20
+```
+
+The following **IR-002 entries** are transcribed from the screenshot. Timestamps are from the **endpoint's UTC log**, which has second-level resolution:
+
+```text
+Oct 29 00:07:22 soc-endpoint sudo[10486]: endpointadmin : TTY=pts/1 ; PWD=/home/endpointadmin ; USER=root ; COMMAND=/usr/bin/stat /etc/shadow
+Oct 29 00:07:32 soc-endpoint sudo[10490]: endpointadmin : TTY=pts/1 ; PWD=/home/endpointadmin ; USER=root ; COMMAND=/usr/bin/tee /opt/soc-fim-test/critical-config.conf
+Oct 29 00:09:24 soc-endpoint sudo[10513]: endpointadmin : TTY=pts/1 ; PWD=/home/endpointadmin ; USER=root ; COMMAND=/usr/bin/sha256sum /opt/soc-fim-test/critical-config.conf
+Oct 29 00:10:03 soc-endpoint sudo[10531]: endpointadmin : TTY=pts/1 ; PWD=/home/endpointadmin ; USER=root ; COMMAND=/usr/bin/tee /opt/soc-fim-test/critical-config.conf
+Oct 29 00:10:10 soc-endpoint sudo[10537]: endpointadmin : TTY=pts/1 ; PWD=/home/endpointadmin ; USER=root ; COMMAND=/usr/bin/sha256sum /opt/soc-fim-test/critical-config.conf
+```
+
+All entries refer to **`soc-endpoint`**, the authenticated account **`endpointadmin`**, session **`pts/1`**, and elevated target **`root`**. These logs corroborate the privileged command, configuration edit, and hash checks. The `sudo tee` audit log records the executable and target path, **not the text written through standard input**; the actual file-content changes are supported by the FIM events, observed file contents, and hashes. Journal command attribution does not independently identify a human operator or prove malicious intent.
 
 ## 3. Recovery and integrity evidence
 
@@ -85,9 +103,9 @@ The alert for recovery is **not a second hostile act**. The rule matches both un
 
 **Triage severity:** The two rules assign Levels **8** and **10** to their individual alerts. These are **rule severities**, not a validated overall business-impact score. The observed pair would justify analyst review when context is unknown.
 
-**Corroborated facts:** The two alert types originated from the same endpoint within 8.702 seconds. The file-integrity alert confirmed a change to a designated test configuration file. Recovery was later observed by FIM and the known-good SHA-256 was restored.
+**Corroborated facts:** The two alert types originated from the same endpoint within 8.702 seconds. The endpoint `sudo` journal confirms that `endpointadmin` initiated both operations from `pts/1` while elevating to `root`. The file-integrity alert confirmed a change to the designated test file. Recovery was observed in both the sudo journal and FIM; the known-good SHA-256 was restored.
 
-**Not established:** The alerts do not show actual password hash access, exfiltration, persistence, lateral movement, or compromise. Without the IR-002 `sudo` journal excerpt, shared-account attribution should not be stated as an independently verified finding.
+**Not established:** Neither the alerts nor sudo entries demonstrate password-hash reading, exfiltration, persistence, lateral movement, unauthorized control, or compromise. Matching account/session details support **operational correlation**, not a claim about the identity of an attacker.
 
 **Containment decision:** Do **not** isolate the VM, disable `endpointadmin`, or block the management host for this authorized simulation. There is no evidence of ongoing unauthorized activity, and destructive or disruptive containment would be disproportionate. In a genuine incident, account identity, approval, command execution context, exposure and scope would be checked before taking such actions.
 
@@ -103,16 +121,13 @@ The alert for recovery is **not a second hostile act**. The rule matches both un
 
 ## 6. Evidence and follow-up
 
-**Reviewed screenshot evidence in the conversation:**
-- IR-002 Wazuh events list showing the two new alerts at **02:07:23.604** and **02:07:32.306**.
-- IR-002 recovery alert at **02:10:03.755**, showing before/after sizes and SHA-256 hashes.
+**Reviewed screenshot evidence in this conversation:**
+- IR-002 Wazuh events list showing alerts at **02:07:23.604** and **02:07:32.306**.
+- IR-002 Wazuh recovery alert at **02:10:03.755**, including before/after hashes.
+- IR-002 endpoint `sudo` journal screenshot showing the command, account, terminal, privilege target and timestamps; relevant lines are preserved above as a **sanitized text excerpt**.
 
-These IR-002 screenshots have **not yet been uploaded to the repository**; do not confuse the earlier [IR-001 screenshots](../evidence/README.md) with evidence for this separate case.
-
-**Pending evidence for a fully corroborated case:**
-- Preserve a sanitized excerpt of the IR-002 `sudo` journal entries and confirm the executing account and commands.
-- Add sanitized IR-002 screenshots to the [evidence gallery](../evidence/README.md), clearly labeled as this exercise.
+The **IR-002 original screenshots have not yet been uploaded** to this repository; the earlier [IR-001 screenshots](../evidence/README.md) must not be mislabeled as IR-002 evidence. A future enhancement is to include selected, cropped, sanitized copies of the three IR-002 screenshots.
 
 ## 7. Outcome
 
-**Recovery verified; investigation documentation completed with an explicit local-log evidence gap.** This exercise shows custom alert correlation, severity analysis, justified non-containment in an authorized lab, and FIM-confirmed recovery. It does **not** demonstrate a real adversarial intrusion.
+**Closed — Detection, account/command correlation, and recovery verified.** This exercise demonstrates custom alert correlation, command-level journal corroboration, severity assessment, justified non-containment for an authorized lab exercise, and FIM-confirmed recovery. It does **not** demonstrate a real adversarial intrusion.
