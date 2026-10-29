@@ -91,7 +91,7 @@ After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An ear
 
 The Wazuh server originally had **UFW inactive** and management listeners including 22, 443, and 55000/TCP on network-facing addresses. UFW was enabled with an **inbound deny** policy and four host- and interface-limited exceptions for Windows SSH/dashboard access and Ubuntu endpoint agent transport/enrollment. The existing Wazuh agent, four Wazuh services, dashboard and Windows SSH connectivity were all verified afterwards. A Windows-origin negative-control connection to the API on **55000/TCP** failed as intended.
 
-See the [Wazuh server UFW assessment](security-hardening/wazuh-server-firewall.md). The control reduces network exposure; it does not remediate Wazuh software CVEs, and server IPv6 filtering and Default Switch reachability require separate assessment.
+See the [Wazuh server UFW assessment](security-hardening/wazuh-server-firewall.md). The control reduces network exposure but does not remediate Wazuh software CVEs. Subsequent IPv6 inspection confirmed `IPV6=yes`, default `INPUT DROP`, no custom IPv6 inbound allow rules, and link-local-only interface addresses. Independent Default Switch reachability testing and external IPv6 connection tests remain open.
 
 ## Selected visual evidence
 
@@ -141,7 +141,8 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [x] Investigate two selected RDMA CVEs, validate the current kernel and document VM-001 exposure mitigation.
 - [ ] Reassess VM-001 when relevant Ubuntu security patches become available and attach sanitized screenshots.
 - [x] Restrict Wazuh server exposure using UFW and verify management, agent, dashboard and API negative-control behavior.
-- [ ] Validate Wazuh server IPv6 firewall behavior and Default Switch reachability.
+- [x] Verify server IPv6 UFW policy, empty IPv6 user-allow chain, and link-local address scope.
+- [ ] Independently test Default Switch and IPv6 management-port reachability.
 - [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
 
 ---
