@@ -8,7 +8,7 @@
 - Implemented a **Level 10 multi-stage correlation** linking user discovery and cron modification within 120 seconds, then verified both triggering and non-triggering scenarios.
 - Investigated security alerts and documented incident response, SSH-focused CIS hardening and vulnerability triage; verified **10 persistent auditd watches** after an endpoint reboot with **zero lost audit records** reported.
 
-**Repository:** https://github.com/orangemetal/SOC-Home-Lab  
+**Repository:** https://github.com/orestisvladimirou/SOC-Home-Lab  
 **Visibility:** Private pending owner-approved public release; the link will not be viewable to most recruiters until access is granted.
 
 ## Shorter version (space-constrained CV)
