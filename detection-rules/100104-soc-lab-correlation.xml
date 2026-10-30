@@ -1,0 +1,13 @@
+<group name="soc_lab,correlation,">
+  <rule id="100104" level="10" frequency="2" timeframe="120">
+    <if_sid>100103</if_sid>
+    <if_matched_sid>100102</if_matched_sid>
+    <same_field>audit.auid</same_field>
+    <description>SOC Lab: User discovery followed by cron configuration modification</description>
+    <mitre>
+      <id>T1033</id>
+      <id>T1053.003</id>
+    </mitre>
+    <group>soc_lab,multi_stage_detection,</group>
+  </rule>
+</group>
