@@ -73,12 +73,28 @@ The account watches were placed in [`70-soc-lab-identity.rules`](70-soc-lab-iden
 
 During loading, the tool also printed `No rules` and multiple audit status blocks, so the validation relies on the **post-load kernel rules and status**, not the intermediary string alone. **A VM reboot has not yet been performed to demonstrate boot-time restoration**.
 
+## Archived visual evidence
+
+**Creation:** A Level 8 rule `100105` event from `/usr/sbin/useradd` (part of the eight events documented above).
+
+![DE-004 positive account creation](../evidence/de004-account-creation.png)
+
+**Read-only negative control:** Zero new matching events against the saved baseline.
+
+![DE-004 negative-control output](../evidence/de004-readonly-negative.png)
+
+**Deletion:** The `userdel`-associated audit-event sequence and successful cleanup detection.
+
+![DE-004 deletion output](../evidence/de004-account-deletion.png)
+
+All images are cropped from actual screenshots supplied during this lab exercise; no alert text or values were fabricated.
+
 ## Limits and follow-up
 
 - The watches were first configured with `auditctl -w` and then saved to the permanent `.rules` file. Reload verification succeeded, but **a post-reboot watch and agent-status check is still outstanding**.
 - File watches and `audit.key` matching provide sensitive change telemetry, but they cannot alone distinguish authorized administration, account creation, permission changes, or malicious escalation. Production tuning would require alert deduplication, change approval context, target-account attribution, false-positive assessment and audit integrity protections.
 - No `sudoers` or other privilege configuration was altered, and no actual privilege escalation was attempted.
 - Full audit logs can contain names, arguments and private details; archive only reviewed/redacted test evidence, not raw `/etc/shadow` or credential material.
-- The provided terminal screenshots substantiate the observed tests; **no sanitized DE-004 screenshot has yet been committed to this repository**.
+- Three cropped original terminal screenshots have been committed as [account creation](../evidence/de004-account-creation.png), [read-only negative control](../evidence/de004-readonly-negative.png), and [account deletion](../evidence/de004-account-deletion.png). These show portions of the manager's test output, **not** a full dashboard incident investigation.
 
 See the [detection catalog](README.md) for all custom rules.
