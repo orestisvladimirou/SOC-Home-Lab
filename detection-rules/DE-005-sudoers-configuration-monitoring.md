@@ -55,6 +55,22 @@ sudo visudo -c
 
 **Observed:** The test file was absent and the remaining `/etc/sudoers` and `/etc/sudoers.d/README` both reported **parsed OK**. Wazuh subsequently recorded **one** new Level 9 `100106` alert for `/usr/bin/rm`, timestamp **2026-10-30T10:16:20.662Z**, with the same test target path. The script printed **`CLEANUP DETECTION VERIFIED`**.
 
+## Archived visual evidence
+
+All three images below are cropped, high-contrast versions of **original terminal screenshots** from this authorized exercise. They display the observed test outputs, not reconstructed or invented logs.
+
+**Positive — one Level 9 alert** at 10:14:20.656 UTC:
+
+![Sudoers change rule 100106 positive evidence](../evidence/de005-sudoers-positive.png)
+
+**Negative — zero new modification alerts** during read-only checks:
+
+![Sudoers monitoring negative control](../evidence/de005-sudoers-negative.png)
+
+**Cleanup — one deletion alert** at 10:16:20.662 UTC:
+
+![Sudoers monitoring cleanup detected](../evidence/de005-sudoers-cleanup.png)
+
 ## Interpretation and limitations
 
 - No new sudo-capable identity was created, and no effective sudo privileges were changed.
