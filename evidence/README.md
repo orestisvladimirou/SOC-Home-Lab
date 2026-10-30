@@ -14,6 +14,8 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 | [Sudo negative control](sudo-custom-negative.png) | Ordinary `5402` event for `/usr/bin/stat /etc/hosts`, not `100101` | [Rule 100101](../detection-rules/README.md) |
 | [IR-001 recovery alert](ir001-recovery.png) | `100100` recovery modification showing the restored SHA-256 | [IR-001](../incident-reports/IR-001-configuration-tampering.md) |
 | [IR-001 terminal hash](ir001-terminal-hash.png) | The harmless test file restored to `security_mode=normal` with verified `sha256sum` | [IR-001](../incident-reports/IR-001-configuration-tampering.md) |
+| [DE-003 positive excerpt](de003-positive-terminal.png) | Cropped original manager terminal line showing `100104`, Level 10, timestamp and correlation description | [DE-003](../detection-rules/DE-003-user-discovery-cron-correlation.md) |
+| [DE-003 negative excerpt](de003-negative-terminal.png) | Cropped original manager output: one `100103`, zero `100104`, and `NEGATIVE CONTROL PASSED` | [DE-003](../detection-rules/DE-003-user-discovery-cron-correlation.md) |
 
 ### SSH hardening — 20 passing checks
 
@@ -32,6 +34,14 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 ![Wazuh alert for restored configuration file](ir001-recovery.png)
 
 ![Ubuntu terminal verifying restored configuration and SHA-256](ir001-terminal-hash.png)
+
+### DE-003 — auditd multi-stage detection
+
+Both snippets are directly cropped from the user-provided live-test terminal screenshots. They have been converted to two-tone high contrast; **no text, rule IDs or result values have been recreated or modified**. The positive crop is a **single Wazuh manager JSON alert line**, not a Wazuh dashboard screenshot. The negative crop is the **summary output of a local parser** over `alerts.json` on the manager, not an indexed alert document itself. For the full sequence and event details, see [DE-003](../detection-rules/DE-003-user-discovery-cron-correlation.md).
+
+![Observed Wazuh manager JSON showing correlation rule 100104 with Level 10 and timestamp](de003-positive-terminal.png)
+
+![Observed negative control: one cron alert and no multi-stage correlation alert](de003-negative-terminal.png)
 
 ## IR-002 — correlated alert evidence to be archived
 
