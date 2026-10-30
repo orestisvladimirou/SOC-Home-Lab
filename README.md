@@ -15,6 +15,8 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Authentication investigation | Repeated test SSH failures detected by Wazuh's built-in brute-force rule `5763` | [Architecture](architecture/README.md) |
 | Custom detection 1 | **Rule 100100**: Level 10 sensitive-file change; positive and negative live tests passed | [XML](detection-rules/soc_lab_fim_rules.xml) |
 | Custom detection 2 | **Rule 100101**: Level 8 privileged command referencing `/etc/shadow`; positive and negative tests passed | [XML](detection-rules/soc_lab_sudo_rules.xml) |
+| Auditd execution and cron monitoring | **Rules 100102–100103**: Level 5 `/usr/bin/id` discovery and Level 8 cron configuration activity observed on `soc-endpoint` | [Detection catalog](detection-rules/README.md) |
+| Multi-stage detection — DE-003 | **Rule 100104**: Level 10 discovery-to-cron correlation; positive and negative live controls passed | [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md) |
 | SSH hardening | **20/20 passing SSH-related** CIS Ubuntu 24.04 checks (not the overall CIS score) | [Hardening notes](security-hardening/README.md) |
 | Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
 | Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
@@ -58,7 +60,18 @@ The virtual machines also use the Hyper-V Default Switch for outbound connectivi
 - **Negative control:** `sudo stat /etc/hosts` → ordinary `sudo` alert.
 - The positive command reads **metadata only**, not password hashes.
 
-See [rule source, implementation notes, test results and limitations](detection-rules/README.md).
+### 100102–100104 — Auditd discovery-to-cron correlation (DE-003)
+
+- **100102:** Level 5 detection of watched `/usr/bin/id` execution (`soc_lab_exec_test` audit key).
+- **100103:** Level 8 detection of watched cron configuration writes (`soc_lab_cron_change` audit key).
+- **100104:** Level 10 correlation of identity discovery and later cron modification, matching `audit.auid` inside a 120-second window.
+- **Positive control (30 October 2026):** Harmless comment-only cron file creation following `/usr/bin/id` produced indexed `100104` at **09:04:41.425 UTC** on agent `001`.
+- **Negative control:** A standalone cron modification after **326 seconds** without fresh discovery produced **one `100103`** and **zero `100104`** alerts. The check reported `NEGATIVE CONTROL PASSED`.
+- **Cleanup:** Both temporary `.disabled` test files were removed. No scheduled task was installed.
+
+The [DE-003 test report](detection-rules/DE-003-user-discovery-cron-correlation.md) documents alert evidence, exact test targets and limitations. This detects **suspicious combinations**, not confirmed malicious persistence. Sanitized DE-003 screenshots are pending addition to GitHub.
+
+See [all rule source files, implementation notes, test results and limitations](detection-rules/README.md).
 
 ## Incident response case study
 
@@ -122,7 +135,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | Folder | Contents |
 | --- | --- |
 | [`architecture/`](architecture/README.md) | Logical topology, host roles, network and monitoring flow |
-| [`detection-rules/`](detection-rules/README.md) | Two custom XML rules, validation strategy and limitations |
+| [`detection-rules/`](detection-rules/README.md) | Five custom XML rules (100100–100104), validation strategy, [DE-003 correlation case study](detection-rules/DE-003-user-discovery-cron-correlation.md) and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
 | [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
@@ -141,7 +154,9 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 
 - [x] Build the Hyper-V lab and integrate Wazuh agent telemetry.
 - [x] Reproduce and investigate SSH authentication failures and file-integrity changes.
-- [x] Create **two** custom detections with positive and negative controls.
+- [x] Create and validate the initial **two** custom detections (100100, 100101) with positive and negative controls.
+- [x] Add auditd rules 100102 and 100103 and live-test multi-stage rule 100104 with positive and negative controls.
+- [ ] Add sanitized DE-003 correlation positive/negative screenshots to the evidence gallery.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
 - [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.
