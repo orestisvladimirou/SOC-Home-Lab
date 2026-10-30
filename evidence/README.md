@@ -48,7 +48,7 @@ Both snippets are directly cropped from the user-provided live-test terminal scr
 
 ### DE-004 — account creation, read-only control and deletion
 
-The following three **high-contrast crops come from user-provided original Wazuh manager terminal screenshots**, not synthetic reconstructions. The full sequences and count interpretations are documented in [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md). Their narrow crops deliberately exclude unrelated portions; the displayed data were not modified. Persistent rule reload is documented from a separate original terminal output, but no post-reboot evidence exists yet.
+The following three **high-contrast crops come from user-provided original Wazuh manager terminal screenshots**, not synthetic reconstructions. The full sequences and count interpretations are documented in [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md). Their narrow crops deliberately exclude unrelated portions; the displayed data were not modified. Persistent rule reload and subsequent reboot-persistence verification are documented in [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md). The post-reboot screenshot was reviewed in the conversation; its cropped evidence image is not yet part of this gallery.
 
 ![DE-004 creation: Level 8 account-database modification for useradd](de004-account-creation.png)
 
