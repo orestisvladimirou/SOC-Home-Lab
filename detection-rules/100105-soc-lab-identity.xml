@@ -1,0 +1,11 @@
+<group name="soc_lab,audit,account_monitoring,">
+  <rule id="100105" level="8">
+    <if_sid>80780</if_sid>
+    <field name="audit.key" type="pcre2">^soc_lab_identity_change$</field>
+    <description>SOC Lab: Linux account database modification detected</description>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+    <group>soc_lab,account_change,</group>
+  </rule>
+</group>
