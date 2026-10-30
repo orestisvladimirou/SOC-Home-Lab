@@ -125,10 +125,12 @@ These are sanitized, cropped screenshots of **real controlled lab test results**
 - [Custom FIM rule 100100 — Level 10 positive detection](evidence/fim-custom-positive.png)
 - [Custom sudo rule 100101 — Level 8 positive detection](evidence/sudo-custom-positive.png)
 - [Custom sudo negative control — normal Level 3 event](evidence/sudo-custom-negative.png)
+- [DE-003 multi-stage positive — rule 100104 Level 10 manager JSON excerpt](evidence/de003-positive-terminal.png)
+- [DE-003 negative control — one 100103, zero 100104](evidence/de003-negative-terminal.png)
 - [IR-001 recovery alert and restored hash](evidence/ir001-recovery.png)
 - [IR-001 terminal verification of known-good value](evidence/ir001-terminal-hash.png)
 
-See the [evidence gallery and context notes](evidence/README.md) for all six images.
+See the [evidence gallery and context notes](evidence/README.md) for all eight images.
 
 ## Repository guide
 
@@ -139,7 +141,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
 | [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
-| [`evidence/`](evidence/README.md) | Six sanitized screenshots and documentation of evidence limitations |
+| [`evidence/`](evidence/README.md) | Eight sanitized screenshots/excerpts and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
 ## Safety and limitations
@@ -156,7 +158,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all six ima
 - [x] Reproduce and investigate SSH authentication failures and file-integrity changes.
 - [x] Create and validate the initial **two** custom detections (100100, 100101) with positive and negative controls.
 - [x] Add auditd rules 100102 and 100103 and live-test multi-stage rule 100104 with positive and negative controls.
-- [ ] Add sanitized DE-003 correlation positive/negative screenshots to the evidence gallery.
+- [x] Archive cropped, sanitized DE-003 correlation positive/negative terminal screenshots in the evidence gallery.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
 - [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.
