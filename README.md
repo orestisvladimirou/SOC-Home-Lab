@@ -80,7 +80,7 @@ See [all rule source files, implementation notes, test results and limitations](
 - **Creation:** A password-locked, non-login test account generated **eight Level 8** modification alerts; command attribution showed `/usr/sbin/useradd`.
 - **Read-only negative control:** `getent`, `id`, and `passwd -S` produced **zero new Level 8** modification alerts against the saved baseline.
 - **Deletion:** `userdel` generated **eight Level 8** modification alerts, and the test account and group were independently verified absent.
-- **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded successfully**; reboot survival remains untested. Screenshots are pending archiving.
+- **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded successfully**; reboot survival remains untested. Three original cropped terminal evidence screenshots have been archived.
 
 See the [DE-004 evidence-based case study](detection-rules/DE-004-linux-account-lifecycle.md).
 
@@ -138,10 +138,13 @@ These are sanitized, cropped screenshots of **real controlled lab test results**
 - [Custom sudo negative control — normal Level 3 event](evidence/sudo-custom-negative.png)
 - [DE-003 multi-stage positive — rule 100104 Level 10 manager JSON excerpt](evidence/de003-positive-terminal.png)
 - [DE-003 negative control — one 100103, zero 100104](evidence/de003-negative-terminal.png)
+- [DE-004 account creation — eight Level 8 rule 100105 alerts](evidence/de004-account-creation.png)
+- [DE-004 negative control — zero new alerts](evidence/de004-readonly-negative.png)
+- [DE-004 account deletion — detected modification events](evidence/de004-account-deletion.png)
 - [IR-001 recovery alert and restored hash](evidence/ir001-recovery.png)
 - [IR-001 terminal verification of known-good value](evidence/ir001-terminal-hash.png)
 
-See the [evidence gallery and context notes](evidence/README.md) for all eight images.
+See the [evidence gallery and context notes](evidence/README.md) for all eleven images.
 
 ## Repository guide
 
@@ -152,7 +155,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all eight i
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
 | [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
-| [`evidence/`](evidence/README.md) | Eight sanitized screenshots/excerpts and documentation of evidence limitations |
+| [`evidence/`](evidence/README.md) | Eleven sanitized screenshots/excerpts and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
 ## Safety and limitations
@@ -172,7 +175,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all eight i
 - [x] Verify rule 100105 account-database modifications using locked-user creation, read-only negative control, and deletion.
 - [x] Install identity watches in a persistent auditd `.rules` file and reload; verify all eight active watches and zero lost events.
 - [ ] Verify all eight audit watches remain active after a controlled endpoint reboot.
-- [ ] Archive reviewed DE-004 terminal screenshots in the evidence gallery.
+- [x] Archive reviewed DE-004 creation, read-only negative-control and deletion terminal screenshots.
 - [x] Archive cropped, sanitized DE-003 correlation positive/negative terminal screenshots in the evidence gallery.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
 - [x] Complete a documented configuration-tampering incident response exercise.
