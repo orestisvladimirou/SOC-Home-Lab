@@ -19,6 +19,9 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 | [DE-004 account creation](de004-account-creation.png) | Cropped original manager output showing rule `100105`, Level 8 and `useradd` | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
 | [DE-004 read-only negative](de004-readonly-negative.png) | Cropped original manager output showing zero new alerts and negative-control pass | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
 | [DE-004 account deletion](de004-account-deletion.png) | Cropped original manager output showing `userdel`-related changes and detection verified | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
+| [DE-005 positive](de005-sudoers-positive.png) | Rule `100106`, Level 9, audited test sudoers directory write | [DE-005](../detection-rules/DE-005-sudoers-configuration-monitoring.md) |
+| [DE-005 negative](de005-sudoers-negative.png) | Read-only test generated zero new rule `100106` alerts | [DE-005](../detection-rules/DE-005-sudoers-configuration-monitoring.md) |
+| [DE-005 cleanup](de005-sudoers-cleanup.png) | Rule `100106` alert for `rm` deletion of comment-only test file | [DE-005](../detection-rules/DE-005-sudoers-configuration-monitoring.md) |
 
 ### SSH hardening — 20 passing checks
 
@@ -55,6 +58,18 @@ The following three **high-contrast crops come from user-provided original Wazuh
 ![DE-004 read-only checks: no new matching alerts](de004-readonly-negative.png)
 
 ![DE-004 deletion: modification alerts and cleanup detection verified](de004-account-deletion.png)
+
+### DE-005 — sudoers path monitoring
+
+Three screenshots below are **cropped high-contrast excerpts of the original Wazuh manager terminal outputs** supplied during the controlled test. The positive and deletion excerpts show the corresponding Level 9 alert metadata. The read-only negative excerpt shows the zero-new-alert result. They do **not** constitute a full sudo privilege change or proof of exploitation.
+
+![Observed 100106 Level 9 event for comment-only sudoers directory test](de005-sudoers-positive.png)
+
+![Observed zero new 100106 alerts for read-only negative control](de005-sudoers-negative.png)
+
+![Observed 100106 Level 9 event for deletion of test file](de005-sudoers-cleanup.png)
+
+See [DE-005](../detection-rules/DE-005-sudoers-configuration-monitoring.md) for detailed timestamps, test limits, and successful post-cleanup `visudo -c` validation.
 
 ## IR-002 — correlated alert evidence to be archived
 
