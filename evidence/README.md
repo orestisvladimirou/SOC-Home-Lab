@@ -16,6 +16,9 @@ All user identifiers visible in the selected screenshots are **lab-only accounts
 | [IR-001 terminal hash](ir001-terminal-hash.png) | The harmless test file restored to `security_mode=normal` with verified `sha256sum` | [IR-001](../incident-reports/IR-001-configuration-tampering.md) |
 | [DE-003 positive excerpt](de003-positive-terminal.png) | Cropped original manager terminal line showing `100104`, Level 10, timestamp and correlation description | [DE-003](../detection-rules/DE-003-user-discovery-cron-correlation.md) |
 | [DE-003 negative excerpt](de003-negative-terminal.png) | Cropped original manager output: one `100103`, zero `100104`, and `NEGATIVE CONTROL PASSED` | [DE-003](../detection-rules/DE-003-user-discovery-cron-correlation.md) |
+| [DE-004 account creation](de004-account-creation.png) | Cropped original manager output showing rule `100105`, Level 8 and `useradd` | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
+| [DE-004 read-only negative](de004-readonly-negative.png) | Cropped original manager output showing zero new alerts and negative-control pass | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
+| [DE-004 account deletion](de004-account-deletion.png) | Cropped original manager output showing `userdel`-related changes and detection verified | [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md) |
 
 ### SSH hardening — 20 passing checks
 
@@ -42,6 +45,16 @@ Both snippets are directly cropped from the user-provided live-test terminal scr
 ![Observed Wazuh manager JSON showing correlation rule 100104 with Level 10 and timestamp](de003-positive-terminal.png)
 
 ![Observed negative control: one cron alert and no multi-stage correlation alert](de003-negative-terminal.png)
+
+### DE-004 — account creation, read-only control and deletion
+
+The following three **high-contrast crops come from user-provided original Wazuh manager terminal screenshots**, not synthetic reconstructions. The full sequences and count interpretations are documented in [DE-004](../detection-rules/DE-004-linux-account-lifecycle.md). Their narrow crops deliberately exclude unrelated portions; the displayed data were not modified. Persistent rule reload is documented from a separate original terminal output, but no post-reboot evidence exists yet.
+
+![DE-004 creation: Level 8 account-database modification for useradd](de004-account-creation.png)
+
+![DE-004 read-only checks: no new matching alerts](de004-readonly-negative.png)
+
+![DE-004 deletion: modification alerts and cleanup detection verified](de004-account-deletion.png)
 
 ## IR-002 — correlated alert evidence to be archived
 
