@@ -1,6 +1,6 @@
 # SOC Home Lab — Wazuh SIEM, Detection Engineering & Incident Response
 
-**Hands-on cybersecurity portfolio project** | Windows Hyper-V · Ubuntu Server 24.04.5 LTS · Wazuh 4.14.9 · Linux security monitoring
+**SOC Home Lab v1.0 — completed hands-on portfolio project (30 October 2026)** | Windows Hyper-V · Ubuntu Server 24.04.5 LTS · Wazuh 4.14.9 · Linux security monitoring
 
 This lab demonstrates how I deployed a small security monitoring environment, investigated generated alerts, wrote and tested custom Wazuh detection rules, hardened an Ubuntu endpoint against CIS benchmark checks and carried out two documented incident-response exercises.
 
@@ -180,7 +180,13 @@ See the [evidence gallery and context notes](evidence/README.md) for all fourtee
 - Reviewed, cropped screenshots are included in the [evidence gallery](evidence/README.md).
 - Wazuh's CIS score and vulnerability counts are assessment outputs, not a substitute for manual risk assessment or evidence of exploitable compromise.
 
-## Planned next steps
+## Portfolio status and publication review
+
+The core build and detection-engineering tests for **v1.0 are complete**. See the [final portfolio and publication review](portfolio/RELEASE-REVIEW.md) for verified outcomes, link checks, privacy findings, and an explicit public-release approval gate. The [CV-ready project entry](portfolio/CV-ENTRY.md) summarizes the work for SOC analyst applications.
+
+**Repository visibility: Private.** A personal Gmail address appears in historical Git author metadata; the owner should review history, evidence images, and intended network disclosures before making it public. No public visibility change was made. Outstanding vulnerability remediation, package indexing, and some extra screenshots remain optional follow-up work, **not completed outcomes**.
+
+## Optional follow-up backlog
 
 - [x] Build the Hyper-V lab and integrate Wazuh agent telemetry.
 - [x] Reproduce and investigate SSH authentication failures and file-integrity changes.
@@ -213,4 +219,4 @@ See the [evidence gallery and context notes](evidence/README.md) for all fourtee
 
 ---
 
-**Project status:** In progress. The linked rules and report reflect completed exercises; planned items are clearly labeled rather than presented as finished.
+**Project status:** **SOC Home Lab v1.0 complete as a portfolio project.** Additional hardening, vulnerability remediation, screenshot archiving and history-aware publication review remain separate follow-up tasks. Repository remains private pending explicit owner approval.
