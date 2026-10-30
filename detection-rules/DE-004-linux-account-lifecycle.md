@@ -1,6 +1,6 @@
 # DE-004 — Linux account lifecycle monitoring with auditd and Wazuh
 
-**Status:** Controlled creation, negative-control and deletion tests **passed** on 30 October 2026. Persistent audit-rule configuration was **installed, compiled and successfully reloaded**; survival across an actual reboot remains **untested**.  
+**Status:** Controlled creation, negative-control and deletion tests **passed** on 30 October 2026. Persistent audit-rule configuration was **installed, compiled, reloaded and verified after a controlled endpoint reboot**.  
 **Scope:** Authorized Linux endpoint account-change monitoring, not an actual compromise or privilege-escalation incident.  
 **Environment:** Ubuntu endpoint `soc-endpoint` (Wazuh agent `001`), monitored by Wazuh 4.14.9 manager `soc-wazuh`.
 
@@ -71,7 +71,7 @@ The account watches were placed in [`70-soc-lab-identity.rules`](70-soc-lab-iden
 - `sudo augenrules --check` returned **No change**, consistent with an up-to-date compiled ruleset.
 - `sudo auditctl -s` reported `enabled 1`, `lost 0`, `backlog 0`.
 
-During loading, the tool also printed `No rules` and multiple audit status blocks, so the validation relies on the **post-load kernel rules and status**, not the intermediary string alone. **A VM reboot has not yet been performed to demonstrate boot-time restoration**.
+During loading, the tool also printed `No rules` and multiple audit status blocks, so the validation relies on the **post-load kernel rules and status**, not the intermediary string alone. **After the subsequent controlled endpoint reboot**, a new SSH session was established using the existing dedicated ED25519 key; no SSH security setting was relaxed. The post-reboot checks independently confirmed: `auditd` and `wazuh-agent` both `active`; all **eight SOC lab watches** loaded (one execution, three cron, four identity); `augenrules --check` reported **No change**; and `auditctl -s` showed **enabled 1**, **lost 0**, **backlog 0**. On the manager, `agent_control -l` reported agent `001` **Active**. This is evidence of rule persistence across **one tested reboot**; continued service uptime and recovery from other failure modes were not tested.
 
 ## Archived visual evidence
 
@@ -91,7 +91,7 @@ All images are cropped from actual screenshots supplied during this lab exercise
 
 ## Limits and follow-up
 
-- The watches were first configured with `auditctl -w` and then saved to the permanent `.rules` file. Reload verification succeeded, but **a post-reboot watch and agent-status check is still outstanding**.
+- The watches were first configured with `auditctl -w` and then saved to the permanent `.rules` file. Reload and **one post-reboot watch/agent-status check both succeeded**. Future kernel, OS and auditd configuration changes should prompt re-validation.
 - File watches and `audit.key` matching provide sensitive change telemetry, but they cannot alone distinguish authorized administration, account creation, permission changes, or malicious escalation. Production tuning would require alert deduplication, change approval context, target-account attribution, false-positive assessment and audit integrity protections.
 - No `sudoers` or other privilege configuration was altered, and no actual privilege escalation was attempted.
 - Full audit logs can contain names, arguments and private details; archive only reviewed/redacted test evidence, not raw `/etc/shadow` or credential material.
