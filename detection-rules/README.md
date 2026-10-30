@@ -40,7 +40,7 @@ The repository contains **only the custom rules authored for the lab**, not Wazu
 
 **Live negative result (2026-10-30):** After 326 seconds since the latest discovery event, an isolated cron file creation generated **one `100103`** alert (**09:10:11.454 UTC**) and **zero `100104`** alerts on that test target. The check returned `NEGATIVE CONTROL PASSED`. Both temporary test files were removed and their absence verified.
 
-See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.md) for the sequence, relevant auditd watch configuration, timestamps, exact paths, assumptions, and limitations. The new XML files are transcriptions from manager console output. Sanitized DE-003 screenshots are still pending repository upload.
+See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.md) for the sequence, relevant auditd watch configuration, timestamps, exact paths, assumptions, and limitations. The new XML files are transcriptions from manager console output. Two [cropped terminal evidence images](../evidence/README.md) for the DE-003 positive and negative controls are now archived in the repository.
 
 ## Installation on a Wazuh manager
 
@@ -85,7 +85,13 @@ The screenshots below are **cropped, high-contrast excerpts** of the lab's origi
 
 The FIM negative-control result (two normal events and zero matches for rule 100100 on the unrelated control file) was observed during the test, but no separate screenshot of the zero-result query was captured.
 
-**DE-003 evidence status:** The rule 100104 indexed dashboard event and the console outputs for the negative control were inspected in the live lab. A sanitized screenshot set for these newer tests has **not yet** been added to `../evidence/`; avoid treating terminal/chat screenshots as a committed GitHub evidence asset.
+**DE-003 evidence status:** The rule 100104 indexed dashboard event and the console outputs for the negative control were inspected in the live lab. Two actual [cropped terminal excerpts](../evidence/README.md) are now committed: [positive](../evidence/de003-positive-terminal.png) and [negative](../evidence/de003-negative-terminal.png). These images are **not** full Wazuh dashboard screenshots.
+
+### DE-003 positive and negative visual excerpts
+
+![Wazuh correlation event 100104, Level 10, from actual manager JSON output](../evidence/de003-positive-terminal.png)
+
+![Negative-control terminal output showing one 100103 and zero 100104 alerts](../evidence/de003-negative-terminal.png)
 
 ## Limitations and future improvements
 
