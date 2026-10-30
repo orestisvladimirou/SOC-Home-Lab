@@ -91,7 +91,7 @@ See the [DE-004 evidence-based case study](detection-rules/DE-004-linux-account-
 - **Positive:** Harmless, ignored comment-only `.disabled` file write → **one Level 9** alert at 10:14:20.656 UTC.
 - **Negative:** Read-only `cat`, `stat` and `visudo -c` → **zero new rule 100106** alerts.
 - **Cleanup:** Temporary file removed, independent `rm` detection at 10:16:20.662 UTC; existing sudo configuration parsed OK.
-- **Limitations:** Detection proves a monitored *filesystem write*, **not** privilege escalation. All ten watches were active after loading; **reboot persistence of the newest two remains unverified**.
+- **Limitations:** Detection proves a monitored *filesystem write*, **not** privilege escalation. All ten watches were active after loading; **all ten audit watches were verified after reboot**, with Wazuh agent online and sudo configuration valid.
 
 See the [DE-005 verified case study and evidence](detection-rules/DE-005-sudoers-configuration-monitoring.md).
 
@@ -189,7 +189,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all fourtee
 - [x] Verify rule 100105 account-database modifications using locked-user creation, read-only negative control, and deletion.
 - [x] Validate rule 100106 sudoers write monitoring with positive, read-only negative, and cleanup detections.
 - [x] Archive three cropped DE-005 positive/negative/cleanup terminal screenshots.
-- [ ] Verify the two new sudoers audit watches survive an endpoint reboot.
+- [x] Verify the two new sudoers audit watches survive a controlled endpoint reboot; all ten watches active, auditd/agent active, sudo config valid, audit lost 0.
 - [x] Install identity watches in a persistent auditd `.rules` file and reload; verify all eight active watches and zero lost events.
 - [x] Verify all eight audit watches remain active after a controlled endpoint reboot; both services and Wazuh agent `001` active, lost audit events `0`.
 - [x] Archive reviewed DE-004 creation, read-only negative-control and deletion terminal screenshots.
