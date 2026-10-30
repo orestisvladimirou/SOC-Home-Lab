@@ -50,7 +50,7 @@ See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.m
 - **Positive (2026-10-30):** Controlled creation of locked, `nologin` test account `soclab_test` produced **8 Level 8 alerts** for `/usr/sbin/useradd`, at **09:42:25.562–09:42:25.583 UTC**.
 - **Negative:** Read-only `getent`, `id` and `passwd -S` checks produced **zero new rule 100105 alerts** relative to a recorded baseline.
 - **Deletion/cleanup:** `sudo userdel soclab_test` produced **8 Level 8 alerts** for `/usr/sbin/userdel`, at **09:44:49.573–09:44:49.594 UTC**. Independent checks confirmed that both the test account and group were gone.
-- **Persistent configuration:** A dedicated [`70-soc-lab-identity.rules`](70-soc-lab-identity.rules) was added under `/etc/audit/rules.d/`. `augenrules --load` exited 0, all **8 active SOC lab watches** remained present, `augenrules --check` reported No change, and `auditctl -s` showed `lost 0`. **A reboot test remains outstanding.** Visual evidence from the new test has **not** been committed yet.
+- **Persistent configuration:** A dedicated [`70-soc-lab-identity.rules`](70-soc-lab-identity.rules) was added under `/etc/audit/rules.d/`. `augenrules --load` exited 0, all **8 active SOC lab watches** remained present, `augenrules --check` reported No change, and `auditctl -s` showed `lost 0`. **A reboot test remains outstanding.** Three [cropped DE-004 terminal screenshots](../evidence/README.md) are now committed for account creation, read-only negative control and deletion.
 
 Read the [DE-004 account lifecycle case study](DE-004-linux-account-lifecycle.md) for the evidence trail, safeguards, and limitations.
 
@@ -104,6 +104,14 @@ The FIM negative-control result (two normal events and zero matches for rule 100
 ![Wazuh correlation event 100104, Level 10, from actual manager JSON output](../evidence/de003-positive-terminal.png)
 
 ![Negative-control terminal output showing one 100103 and zero 100104 alerts](../evidence/de003-negative-terminal.png)
+
+### DE-004 terminal evidence
+
+![Observed Level 8 identity database modification event for useradd](../evidence/de004-account-creation.png)
+
+![Observed negative control with zero new alerts](../evidence/de004-readonly-negative.png)
+
+![Observed userdel modification events and detection verification](../evidence/de004-account-deletion.png)
 
 ## Limitations and future improvements
 
