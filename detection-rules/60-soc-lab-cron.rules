@@ -1,0 +1,4 @@
+# SOC Lab - monitor cron configuration changes
+-w /etc/crontab -p wa -k soc_lab_cron_change
+-w /etc/cron.d -p wa -k soc_lab_cron_change
+-w /etc/cron.daily -p wa -k soc_lab_cron_change
