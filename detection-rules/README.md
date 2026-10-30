@@ -66,6 +66,21 @@ Read the [DE-004 account lifecycle case study](DE-004-linux-account-lifecycle.md
 
 See the [DE-005 sudoers case study](DE-005-sudoers-configuration-monitoring.md) and [terminal evidence](../evidence/README.md).
 
+## What needs to be configured
+
+The XML files are the **manager-side detections**. The auditd rules are separate, and must be installed on the **monitored endpoint**. The four archived files cover the ten observed persistent watches:
+
+| Endpoint auditd file | Watches | Purpose |
+| --- | ---: | --- |
+| [`50-soc-lab-exec.rules`](50-soc-lab-exec.rules) | 1 | Track `/usr/bin/id` execution |
+| [`60-soc-lab-cron.rules`](60-soc-lab-cron.rules) | 3 | Monitor cron configuration |
+| [`70-soc-lab-identity.rules`](70-soc-lab-identity.rules) | 4 | Monitor account databases |
+| [`80-soc-lab-sudoers.rules`](80-soc-lab-sudoers.rules) | 2 | Monitor sudoers configuration |
+
+These are copies of the tested settings, not automatically installed by cloning the repository. Back up the endpoint's existing `/etc/audit/rules.d/` files before deploying them. On the endpoint, check `sudo augenrules --check`, load with `sudo augenrules --load`, then verify the actual kernel watches with `sudo auditctl -l`. A reload is not a substitute for checking the resulting ruleset.
+
+The manager also needs matching key classifications in `/var/ossec/etc/lists/audit-keys`. See the [example entries](audit-keys.soc-lab.example); **merge missing entries only**, rather than overwriting the built-in list. The two later `:write` mappings were observed during DE-004 and DE-005 deployment; confirm the appropriate category for every key against the installed Wazuh version.
+
 ## Installation on a Wazuh manager
 
 For an appropriately isolated practice environment, copy the XML files to `/var/ossec/etc/rules/`, assign the manager's `wazuh:wazuh` ownership and restrictive permissions, validate, then restart the manager to load changes:
@@ -80,7 +95,7 @@ sudo systemctl restart wazuh-manager
 sudo systemctl is-active wazuh-manager
 ```
 
-The rule files expect compatible parent rule IDs, decoded event fields and endpoint auditd watches. Confirm these against the installed Wazuh ruleset before reuse in other versions. The three numbered filenames are the paths observed on the manager; their exact names do not control rule execution.
+The rule files expect compatible parent rule IDs, decoded event fields and endpoint auditd watches. Confirm these against the installed Wazuh ruleset before reuse in other versions. The five numbered XML filenames mirror the files installed on the manager; the XML rule IDs, not these filenames, determine the rule identities.
 
 ## Testing approach
 
