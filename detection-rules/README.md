@@ -38,7 +38,7 @@ The repository contains **only the custom rules authored for the lab**, not Wazu
 
 **Live positive result (2026-10-30):** The manager indexed rule `100104` at **09:04:41.425 UTC** on agent `001`, with `/usr/bin/tee` writing a comment-only `.disabled` file under `/etc/cron.d`. The audit login ID was `1000`; this was an authorized test and did **not** install an active cron task.
 
-**Live negative result (2026-10-30):** After 326 seconds since the latest discovery event, an isolated cron file creation generated **one `100103`** alert (**09:11:14.454 UTC**) and **zero `100104`** alerts on that test target. The check returned `NEGATIVE CONTROL PASSED`. Both temporary test files were removed and their absence verified.
+**Live negative result (2026-10-30):** After 326 seconds since the latest discovery event, an isolated cron file creation generated **one `100103`** alert (**09:10:11.454 UTC**) and **zero `100104`** alerts on that test target. The check returned `NEGATIVE CONTROL PASSED`. Both temporary test files were removed and their absence verified.
 
 See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.md) for the sequence, relevant auditd watch configuration, timestamps, exact paths, assumptions, and limitations. The new XML files are transcriptions from manager console output. Sanitized DE-003 screenshots are still pending repository upload.
 
