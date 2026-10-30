@@ -49,7 +49,7 @@ The user-discovery **100102** alerts were visible in the manager's alert query. 
 2. Without executing `/usr/bin/id` again, write a separate comment-only file at `/etc/cron.d/soc-lab-negative-test.disabled`.
 3. Query manager `alerts.json` for that **exact target path**, comparing rule IDs `100103` and `100104`.
 
-**Observed result:** Exactly **one 100103** alert at **2026-10-30T09:11:14.454Z**, and **zero 100104** alerts matched the negative-control target. The terminal printed **`NEGATIVE CONTROL PASSED`**.
+**Observed result:** Exactly **one 100103** alert at **2026-10-30T09:10:11.454Z**, and **zero 100104** alerts matched the negative-control target. The terminal printed **`NEGATIVE CONTROL PASSED`**.
 
 Both temporary `.disabled` files were removed with `sudo rm -f`, and separate absence checks printed successful cleanup messages. Their names and contents were deliberate safety constraints: no actual cron job or payload was installed.
 
