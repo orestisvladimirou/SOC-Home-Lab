@@ -14,6 +14,7 @@ The repository contains **only the custom rules authored for the lab**, not Wazu
 | [`100103`](100103-soc-lab-cron.xml) | 8 | Auditd cron write watch, parent `80780` | Audit key `soc_lab_cron_change` | Live cron modification alert, including negative control |
 | [`100104`](100104-soc-lab-correlation.xml) | 10 | Prior `100102` and current `100103`, matching `audit.auid` within 120 s | User discovery followed by cron change | **Positive live correlation + negative control passed** |
 | [`100105`](100105-soc-lab-identity.xml) | 8 | Auditd account database write/attribute changes, parent `80780` | Audit key `soc_lab_identity_change` | **Creation + read-only negative control + deletion passed** |
+| [`100106`](100106-soc-lab-sudoers.xml) | 9 | Auditd sudoers file/directory write watch, parent `80780` | Audit key `soc_lab_sudoers_change` | **Positive + read-only negative + cleanup detection passed** |
 
 ### Rule 100100 — Sensitive configuration change
 
@@ -54,14 +55,25 @@ See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.m
 
 Read the [DE-004 account lifecycle case study](DE-004-linux-account-lifecycle.md) for the evidence trail, safeguards, and limitations.
 
+### Rule 100106 — Sudoers directory write monitoring (DE-005)
+
+- **Watch configuration:** [`80-soc-lab-sudoers.rules`](80-soc-lab-sudoers.rules) adds write/attribute watches for `/etc/sudoers` and `/etc/sudoers.d`, bringing the verified **active total to 10 SOC lab audit watches**.
+- **Wazuh rule:** [`100106`](100106-soc-lab-sudoers.xml), Level 9, triggers from built-in auditd write rule `80780` when `audit.key=soc_lab_sudoers_change`. Manager's `audit-keys` list includes `soc_lab_sudoers_change:write`.
+- **Positive test:** `/usr/bin/tee` wrote a comment-only ignored `.disabled` file inside `/etc/sudoers.d`; **one** Level 9 alert at **2026-10-30 10:14:20.656 UTC**.
+- **Negative test:** `cat`, `stat`, and `visudo -c` were read-only; **zero** new `100106` alerts against the saved baseline.
+- **Cleanup:** `rm` removed the temporary file, generating **one** additional Level 9 alert at **10:16:20.662 UTC**; `visudo -c` reported parsed OK after cleanup.
+- **Caveat:** This is a **sudoers path-change detector**, not proof of altered effective privileges or escalation. **Post-reboot persistence of these two new watches remains untested.**
+
+See the [DE-005 sudoers case study](DE-005-sudoers-configuration-monitoring.md) and [terminal evidence](../evidence/README.md).
+
 ## Installation on a Wazuh manager
 
 For an appropriately isolated practice environment, copy the XML files to `/var/ossec/etc/rules/`, assign the manager's `wazuh:wazuh` ownership and restrictive permissions, validate, then restart the manager to load changes:
 
 ```bash
 # After copying the repository XML into /var/ossec/etc/rules/:
-sudo chown wazuh:wazuh /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[2345]-soc-lab-*.xml
-sudo chmod 640 /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[2345]-soc-lab-*.xml
+sudo chown wazuh:wazuh /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[23456]-soc-lab-*.xml
+sudo chmod 640 /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[23456]-soc-lab-*.xml
 sudo /var/ossec/bin/wazuh-analysisd -t
 # Restart only after the configuration test passes:
 sudo systemctl restart wazuh-manager
@@ -112,6 +124,14 @@ The FIM negative-control result (two normal events and zero matches for rule 100
 ![Observed negative control with zero new alerts](../evidence/de004-readonly-negative.png)
 
 ![Observed userdel modification events and detection verification](../evidence/de004-account-deletion.png)
+
+### DE-005 terminal evidence
+
+![Rule 100106 Level 9 positive alert](../evidence/de005-sudoers-positive.png)
+
+![Negative control: zero new rule 100106 alerts](../evidence/de005-sudoers-negative.png)
+
+![Cleanup: rule 100106 fired on rm](../evidence/de005-sudoers-cleanup.png)
 
 ## Limitations and future improvements
 
