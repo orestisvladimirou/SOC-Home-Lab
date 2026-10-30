@@ -158,7 +158,7 @@ def main() -> int:
     nwatches = check_audit_rules(errors)
     nlinks = check_links(errors)
     npngs = check_pngs(errors)
-    print(f"Checked {nrules} rule IDs, {nwatches} archived account/sudoers watches, "
+    print(f"Checked {nrules} rule IDs, {nwatches} archived auditd watches, "
           f"{nlinks} relative links and {npngs} PNG images.")
     if errors:
         for error in errors:
