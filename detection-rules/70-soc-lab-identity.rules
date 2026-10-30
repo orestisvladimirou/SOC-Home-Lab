@@ -1,0 +1,6 @@
+# Persistent SOC lab account-database watches
+# Deployed on soc-endpoint as /etc/audit/rules.d/70-soc-lab-identity.rules
+-w /etc/passwd -p wa -k soc_lab_identity_change
+-w /etc/shadow -p wa -k soc_lab_identity_change
+-w /etc/group -p wa -k soc_lab_identity_change
+-w /etc/gshadow -p wa -k soc_lab_identity_change
