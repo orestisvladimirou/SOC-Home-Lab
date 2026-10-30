@@ -1,6 +1,6 @@
 # DE-005 — Sudoers configuration monitoring
 
-**Status:** Positive detection, read-only negative control, cleanup detection and sudo configuration validation **passed**, 30 October 2026 UTC. Auditd watches compiled and loaded; **post-reboot persistence not yet tested** for these two new watches.
+**Status:** Positive detection, read-only negative control, cleanup detection and sudo configuration validation **passed**, 30 October 2026 UTC. Auditd watches compiled, loaded, and **verified after a controlled endpoint reboot**.
 
 **Environment:** Ubuntu 24.04.5 LTS monitored agent `soc-endpoint` (Wazuh `001`); Wazuh manager `soc-wazuh` 4.14.9. All actions were authorized and performed on the user's isolated home-lab environment.
 
@@ -71,13 +71,31 @@ All three images below are cropped, high-contrast versions of **original termina
 
 ![Sudoers monitoring cleanup detected](../evidence/de005-sudoers-cleanup.png)
 
+## Controlled reboot persistence validation
+
+After confirming both sudoers watches were present in compiled `/etc/audit/audit.rules` and that `augenrules --check` reported **No change**, the analyst rebooted **only the monitored endpoint** at approximately **10:24:51 UTC, 30 October 2026**. The existing passphrase-protected ED25519 SSH key was used to reconnect. No SSH authentication or firewall hardening was relaxed.
+
+**Post-reboot verification:**
+
+| Check | Observed result |
+| --- | --- |
+| `systemctl is-active auditd wazuh-agent` | `active`, `active` |
+| `auditctl -l` | All **10** SOC lab watches, including both sudoers watches |
+| `auditctl -l | grep -c 'soc_lab_'` | `10` |
+| `augenrules --check` | `No change` |
+| `auditctl -s` | `enabled 1`, `lost 0`, `backlog 0` |
+| `visudo -c` | `/etc/sudoers` and `/etc/sudoers.d/README` both **parsed OK** |
+| Manager `agent_control -l` | Agent `001` (`soc-endpoint`) **Active** |
+
+This is a verified, bounded **single-reboot persistence test**. The terminal screenshots were inspected in the lab conversation; the existing [gallery](../evidence/README.md) contains the prior positive, negative, and cleanup evidence, not a standalone post-reboot crop.
+
 ## Interpretation and limitations
 
 - No new sudo-capable identity was created, and no effective sudo privileges were changed.
 - A write or deletion within the watched directory is a **configuration-path activity signal**, **not proof** that effective policy changed or that an attacker escalated privileges.
 - Neither the rule nor these tests show comprehensive coverage of all privilege escalation paths. Other mechanisms such as setuid binaries, PAM policy, or capabilities are outside scope.
 - Wazuh alerting depends on auditd watches, log ingestion, compatible event decoding, parent rule `80780`, and the manager's audit-key mapping.
-- The new auditd rules loaded successfully and were verified among ten active watches, but **their survival across a later endpoint reboot remains untested**.
+- Both sudoers watches survived **one controlled endpoint reboot** as part of ten active SOC lab watches. This does not prove resilience to every later OS update or auditd configuration change.
 - No automatic response or containment was configured.
 - Screenshots were supplied from real lab terminal tests; the write-up distinguishes observed outputs from interpretations. Reviewed excerpts are archived in the [evidence gallery](../evidence/README.md).
 
