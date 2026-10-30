@@ -53,6 +53,18 @@ The user-discovery **100102** alerts were visible in the manager's alert query. 
 
 Both temporary `.disabled` files were removed with `sudo rm -f`, and separate absence checks printed successful cleanup messages. Their names and contents were deliberate safety constraints: no actual cron job or payload was installed.
 
+## Archived visual evidence
+
+**Positive — Level 10 correlation:** original Wazuh manager JSON alert line, cropped to the relevant timestamp, rule ID and description. The full matching dashboard JSON was inspected during the lab but is not presented as a screenshot here.
+
+![Rule 100104 Level 10 positive terminal excerpt](../evidence/de003-positive-terminal.png)
+
+**Negative — isolated cron activity:** original manager terminal output showing one `100103`, zero `100104`, and `NEGATIVE CONTROL PASSED`.
+
+![DE-003 negative-control terminal excerpt](../evidence/de003-negative-terminal.png)
+
+Both images are cropped from original user-provided screenshots and converted to high-contrast monochrome; no event values were added.
+
 ## Detection interpretation and limitations
 
 - This is a **single positive and single negative live-test sequence** in an isolated lab. It confirms observed behavior for the tested telemetry and ordering; it does not prove comprehensive detection coverage, absence of false positives, or production readiness.
@@ -61,7 +73,7 @@ Both temporary `.disabled` files were removed with `sudo rm -f`, and separate ab
 - `audit.auid` associates audit events with a login audit identity, **not** definitive proof that the same person intentionally performed both steps. Authorized administration may produce the sequence.
 - The MITRE tags describe relevant **techniques**, not confirmed attacker intent or successful scheduled-task persistence.
 - No automatic isolation or blocking response was added.
-- The alert was reviewed through the Wazuh dashboard and terminal output during testing. **Sanitized DE-003 screenshots have not yet been committed** to the repository; do not cite nonexistent image files.
+- The alert was reviewed through the Wazuh dashboard and terminal output during testing. **Two cropped high-contrast excerpts of actual terminal output are now archived**: [positive Level 10 JSON alert](../evidence/de003-positive-terminal.png) and [negative-control summary](../evidence/de003-negative-terminal.png). These are not full dashboard captures, nor do they alone show every associated event.
 
 ## Further tuning
 
