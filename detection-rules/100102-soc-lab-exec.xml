@@ -1,0 +1,12 @@
+<group name="soc_lab,audit,discovery,">
+  <rule id="100102" level="5">
+    <if_sid>80789</if_sid>
+    <field name="audit.key" type="pcre2">^soc_lab_exec_test$</field>
+    <field name="audit.exe" type="pcre2">^/usr/bin/id$</field>
+    <description>SOC Lab: User identity discovery command executed: $(audit.exe)</description>
+    <mitre>
+      <id>T1033</id>
+    </mitre>
+    <group>soc_lab,discovery,</group>
+  </rule>
+</group>
