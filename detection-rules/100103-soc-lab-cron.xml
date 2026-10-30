@@ -1,0 +1,11 @@
+<group name="soc_lab,audit,persistence,">
+  <rule id="100103" level="8">
+    <if_sid>80780</if_sid>
+    <field name="audit.key" type="pcre2">^soc_lab_cron_change$</field>
+    <description>SOC Lab: Modification detected in monitored cron configuration</description>
+    <mitre>
+      <id>T1053.003</id>
+    </mitre>
+    <group>soc_lab,cron_persistence,</group>
+  </rule>
+</group>
