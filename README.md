@@ -73,6 +73,16 @@ The [evidence gallery](evidence/README.md) contains **14 cropped screenshots** f
 | [`evidence/`](evidence/README.md) | Test screenshots and interpretation notes |
 | [`portfolio/`](portfolio/RELEASE-REVIEW.md) | [Publication review](portfolio/RELEASE-REVIEW.md) and [CV entry](portfolio/CV-ENTRY.md) |
 
+## Checking the repository
+
+From a clone of this repository, run:
+
+```bash
+python3 scripts/check_repository.py
+```
+
+The [offline checker](scripts/check_repository.py) checks the seven rule files, ten archived auditd watches, relative Markdown links and the integrity of the archived PNG files. It uses only the Python standard library. It **does not** execute Wazuh rules or connect to the lab VMs; the live test results are documented in the linked reports.
+
 ## Limits and next steps
 
 All security events were generated in an **authorized home lab**, not during a real intrusion. The custom rules have deliberately narrow coverage, and a positive alert is not proof of exploitation. Vulnerability findings need advisory-level validation; several mitigations and inventory issues remain open. The cases are intended to show how I tested and investigated them, not to imply production readiness.
