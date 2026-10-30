@@ -80,7 +80,7 @@ See [all rule source files, implementation notes, test results and limitations](
 - **Creation:** A password-locked, non-login test account generated **eight Level 8** modification alerts; command attribution showed `/usr/sbin/useradd`.
 - **Read-only negative control:** `getent`, `id`, and `passwd -S` produced **zero new Level 8** modification alerts against the saved baseline.
 - **Deletion:** `userdel` generated **eight Level 8** modification alerts, and the test account and group were independently verified absent.
-- **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded successfully**; reboot survival remains untested. Three original cropped terminal evidence screenshots have been archived.
+- **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded and verified after one endpoint reboot**; all eight watches and agent connectivity were restored. Three original cropped terminal evidence screenshots have been archived.
 
 See the [DE-004 evidence-based case study](detection-rules/DE-004-linux-account-lifecycle.md).
 
@@ -174,7 +174,7 @@ See the [evidence gallery and context notes](evidence/README.md) for all eleven 
 - [x] Add auditd rules 100102 and 100103 and live-test multi-stage rule 100104 with positive and negative controls.
 - [x] Verify rule 100105 account-database modifications using locked-user creation, read-only negative control, and deletion.
 - [x] Install identity watches in a persistent auditd `.rules` file and reload; verify all eight active watches and zero lost events.
-- [ ] Verify all eight audit watches remain active after a controlled endpoint reboot.
+- [x] Verify all eight audit watches remain active after a controlled endpoint reboot; both services and Wazuh agent `001` active, lost audit events `0`.
 - [x] Archive reviewed DE-004 creation, read-only negative-control and deletion terminal screenshots.
 - [x] Archive cropped, sanitized DE-003 correlation positive/negative terminal screenshots in the evidence gallery.
 - [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
