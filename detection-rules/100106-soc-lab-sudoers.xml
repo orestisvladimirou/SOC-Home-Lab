@@ -1,0 +1,11 @@
+<group name="soc_lab,audit,privileged_config,">
+  <rule id="100106" level="9">
+    <if_sid>80780</if_sid>
+    <field name="audit.key" type="pcre2">^soc_lab_sudoers_change$</field>
+    <description>SOC Lab: Sudo privilege configuration write detected</description>
+    <mitre>
+      <id>T1548.003</id>
+    </mitre>
+    <group>soc_lab,sudoers_change,</group>
+  </rule>
+</group>
