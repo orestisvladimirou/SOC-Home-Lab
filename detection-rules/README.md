@@ -62,7 +62,7 @@ Read the [DE-004 account lifecycle case study](DE-004-linux-account-lifecycle.md
 - **Positive test:** `/usr/bin/tee` wrote a comment-only ignored `.disabled` file inside `/etc/sudoers.d`; **one** Level 9 alert at **2026-10-30 10:14:20.656 UTC**.
 - **Negative test:** `cat`, `stat`, and `visudo -c` were read-only; **zero** new `100106` alerts against the saved baseline.
 - **Cleanup:** `rm` removed the temporary file, generating **one** additional Level 9 alert at **10:16:20.662 UTC**; `visudo -c` reported parsed OK after cleanup.
-- **Caveat:** This is a **sudoers path-change detector**, not proof of altered effective privileges or escalation. **Post-reboot persistence of these two new watches remains untested.**
+- **Caveat:** This is a **sudoers path-change detector**, not proof of altered effective privileges or escalation. **A controlled endpoint reboot was passed**: both new sudoers watches and all eight existing audit watches reloaded automatically, `auditd` and Wazuh agent active, `augenrules --check` No change, `auditctl -s` enabled 1/lost 0, and `visudo -c` parsed OK.
 
 See the [DE-005 sudoers case study](DE-005-sudoers-configuration-monitoring.md) and [terminal evidence](../evidence/README.md).
 
