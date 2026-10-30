@@ -21,10 +21,19 @@ RULES = {
     "100106-soc-lab-sudoers.xml": ("100106", "9"),
 }
 AUDIT_FILES = {
-    "70-soc-lab-identity.rules": {
-        "/etc/passwd", "/etc/shadow", "/etc/group", "/etc/gshadow"
-    },
-    "80-soc-lab-sudoers.rules": {"/etc/sudoers", "/etc/sudoers.d"},
+    "50-soc-lab-exec.rules": ({"/usr/bin/id"}, "soc_lab_exec_test", "x"),
+    "60-soc-lab-cron.rules": (
+        {"/etc/crontab", "/etc/cron.d", "/etc/cron.daily"},
+        "soc_lab_cron_change", "wa"
+    ),
+    "70-soc-lab-identity.rules": (
+        {"/etc/passwd", "/etc/shadow", "/etc/group", "/etc/gshadow"},
+        "soc_lab_identity_change", "wa"
+    ),
+    "80-soc-lab-sudoers.rules": (
+        {"/etc/sudoers", "/etc/sudoers.d"},
+        "soc_lab_sudoers_change", "wa"
+    ),
 }
 LINK = re.compile(r"!?(?:\[[^\]]*\])\(([^)]+)\)")
 PNG_HEADER = b"\x89PNG\r\n\x1a\n"
@@ -62,7 +71,7 @@ def check_xml(errors: list[str]) -> int:
 
 def check_audit_rules(errors: list[str]) -> int:
     total = 0
-    for filename, paths in AUDIT_FILES.items():
+    for filename, (paths, expected_key, expected_perms) in AUDIT_FILES.items():
         path = ROOT / "detection-rules" / filename
         if not path.is_file():
             errors.append(f"Missing auditd configuration: {filename}")
@@ -70,15 +79,13 @@ def check_audit_rules(errors: list[str]) -> int:
         lines = [line.strip() for line in path.read_text().splitlines()
                  if line.strip() and not line.lstrip().startswith("#")]
         found = set()
-        expected_key = ("soc_lab_identity_change"
-                        if filename.startswith("70-") else "soc_lab_sudoers_change")
         for line in lines:
-            match = re.fullmatch(r"-w (\S+) -p wa -k (\S+)", line)
+            match = re.fullmatch(r"-w (\S+) -p (x|wa) -k (\S+)", line)
             if not match:
                 errors.append(f"{filename}: unexpected audit watch: {line}")
                 continue
-            target, key = match.groups()
-            if target in found or key != expected_key:
+            target, perms, key = match.groups()
+            if target in found or key != expected_key or perms != expected_perms:
                 errors.append(f"{filename}: duplicate path or wrong audit key: {line}")
             found.add(target)
         if found != paths:
