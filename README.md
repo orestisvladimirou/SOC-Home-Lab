@@ -18,6 +18,7 @@ This lab demonstrates how I deployed a small security monitoring environment, in
 | Auditd execution and cron monitoring | **Rules 100102–100103**: Level 5 `/usr/bin/id` discovery and Level 8 cron configuration activity observed on `soc-endpoint` | [Detection catalog](detection-rules/README.md) |
 | Multi-stage detection — DE-003 | **Rule 100104**: Level 10 discovery-to-cron correlation; positive and negative live controls passed | [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md) |
 | Account lifecycle monitoring — DE-004 | **Rule 100105**: Level 8 account-database change; controlled account creation, read-only negative control, and deletion passed | [DE-004](detection-rules/DE-004-linux-account-lifecycle.md) |
+| Sudoers change monitoring — DE-005 | **Rule 100106**: Level 9 sudoers directory change; positive, read-only negative and deletion controls passed | [DE-005](detection-rules/DE-005-sudoers-configuration-monitoring.md) |
 | SSH hardening | **20/20 passing SSH-related** CIS Ubuntu 24.04 checks (not the overall CIS score) | [Hardening notes](security-hardening/README.md) |
 | Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
 | Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
@@ -70,7 +71,7 @@ The virtual machines also use the Hyper-V Default Switch for outbound connectivi
 - **Negative control:** A standalone cron modification after **326 seconds** without fresh discovery produced **one `100103`** and **zero `100104`** alerts. The check reported `NEGATIVE CONTROL PASSED`.
 - **Cleanup:** Both temporary `.disabled` test files were removed. No scheduled task was installed.
 
-The [DE-003 test report](detection-rules/DE-003-user-discovery-cron-correlation.md) documents alert evidence, exact test targets and limitations. This detects **suspicious combinations**, not confirmed malicious persistence. Sanitized DE-003 screenshots are pending addition to GitHub.
+The [DE-003 test report](detection-rules/DE-003-user-discovery-cron-correlation.md) documents alert evidence, exact test targets and limitations. This detects **suspicious combinations**, not confirmed malicious persistence. Sanitized DE-003 terminal excerpts are archived in the evidence gallery.
 
 See [all rule source files, implementation notes, test results and limitations](detection-rules/README.md).
 
@@ -83,6 +84,16 @@ See [all rule source files, implementation notes, test results and limitations](
 - **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded and verified after one endpoint reboot**; all eight watches and agent connectivity were restored. Three original cropped terminal evidence screenshots have been archived.
 
 See the [DE-004 evidence-based case study](detection-rules/DE-004-linux-account-lifecycle.md).
+
+### 100106 — Sudoers configuration monitoring (DE-005)
+
+- **Watches:** `/etc/sudoers` and `/etc/sudoers.d`, via [persistent auditd watch file](detection-rules/80-soc-lab-sudoers.rules), rule [100106](detection-rules/100106-soc-lab-sudoers.xml) (Level 9).
+- **Positive:** Harmless, ignored comment-only `.disabled` file write → **one Level 9** alert at 10:14:20.656 UTC.
+- **Negative:** Read-only `cat`, `stat` and `visudo -c` → **zero new rule 100106** alerts.
+- **Cleanup:** Temporary file removed, independent `rm` detection at 10:16:20.662 UTC; existing sudo configuration parsed OK.
+- **Limitations:** Detection proves a monitored *filesystem write*, **not** privilege escalation. All ten watches were active after loading; **reboot persistence of the newest two remains unverified**.
+
+See the [DE-005 verified case study and evidence](detection-rules/DE-005-sudoers-configuration-monitoring.md).
 
 ## Incident response case study
 
@@ -141,21 +152,24 @@ These are sanitized, cropped screenshots of **real controlled lab test results**
 - [DE-004 account creation — eight Level 8 rule 100105 alerts](evidence/de004-account-creation.png)
 - [DE-004 negative control — zero new alerts](evidence/de004-readonly-negative.png)
 - [DE-004 account deletion — detected modification events](evidence/de004-account-deletion.png)
+- [DE-005 sudoers change — Level 9 positive detection](evidence/de005-sudoers-positive.png)
+- [DE-005 read-only negative — zero new alerts](evidence/de005-sudoers-negative.png)
+- [DE-005 cleanup — Level 9 deletion detection](evidence/de005-sudoers-cleanup.png)
 - [IR-001 recovery alert and restored hash](evidence/ir001-recovery.png)
 - [IR-001 terminal verification of known-good value](evidence/ir001-terminal-hash.png)
 
-See the [evidence gallery and context notes](evidence/README.md) for all eleven images.
+See the [evidence gallery and context notes](evidence/README.md) for all fourteen images.
 
 ## Repository guide
 
 | Folder | Contents |
 | --- | --- |
 | [`architecture/`](architecture/README.md) | Logical topology, host roles, network and monitoring flow |
-| [`detection-rules/`](detection-rules/README.md) | Six custom XML rules (100100–100105), [DE-003 correlation study](detection-rules/DE-003-user-discovery-cron-correlation.md), [DE-004 account lifecycle study](detection-rules/DE-004-linux-account-lifecycle.md), and limitations |
+| [`detection-rules/`](detection-rules/README.md) | Seven custom XML rules (100100–100106), [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md), [DE-004](detection-rules/DE-004-linux-account-lifecycle.md), [DE-005](detection-rules/DE-005-sudoers-configuration-monitoring.md), and limitations |
 | [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
 | [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
 | [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
-| [`evidence/`](evidence/README.md) | Eleven sanitized screenshots/excerpts and documentation of evidence limitations |
+| [`evidence/`](evidence/README.md) | Fourteen sanitized screenshots/excerpts and documentation of evidence limitations |
 | [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
 
 ## Safety and limitations
@@ -173,6 +187,9 @@ See the [evidence gallery and context notes](evidence/README.md) for all eleven 
 - [x] Create and validate the initial **two** custom detections (100100, 100101) with positive and negative controls.
 - [x] Add auditd rules 100102 and 100103 and live-test multi-stage rule 100104 with positive and negative controls.
 - [x] Verify rule 100105 account-database modifications using locked-user creation, read-only negative control, and deletion.
+- [x] Validate rule 100106 sudoers write monitoring with positive, read-only negative, and cleanup detections.
+- [x] Archive three cropped DE-005 positive/negative/cleanup terminal screenshots.
+- [ ] Verify the two new sudoers audit watches survive an endpoint reboot.
 - [x] Install identity watches in a persistent auditd `.rules` file and reload; verify all eight active watches and zero lost events.
 - [x] Verify all eight audit watches remain active after a controlled endpoint reboot; both services and Wazuh agent `001` active, lost audit events `0`.
 - [x] Archive reviewed DE-004 creation, read-only negative-control and deletion terminal screenshots.
