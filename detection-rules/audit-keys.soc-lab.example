@@ -1,0 +1,6 @@
+# Example entries to merge into /var/ossec/etc/lists/audit-keys on the Wazuh manager.
+# Do not replace the existing list. Confirm category names against your Wazuh version.
+soc_lab_exec_test:execute
+soc_lab_cron_change:write
+soc_lab_identity_change:write
+soc_lab_sudoers_change:write
