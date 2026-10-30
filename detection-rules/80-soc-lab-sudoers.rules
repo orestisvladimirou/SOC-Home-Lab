@@ -1,0 +1,3 @@
+# SOC Lab - Privileged configuration monitoring
+-w /etc/sudoers -p wa -k soc_lab_sudoers_change
+-w /etc/sudoers.d -p wa -k soc_lab_sudoers_change
