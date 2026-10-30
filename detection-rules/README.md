@@ -13,6 +13,7 @@ The repository contains **only the custom rules authored for the lab**, not Wazu
 | [`100102`](100102-soc-lab-exec.xml) | 5 | Auditd `/usr/bin/id` execution, parent `80789` | Audit key `soc_lab_exec_test` plus exact executable | Live discovery alerts observed |
 | [`100103`](100103-soc-lab-cron.xml) | 8 | Auditd cron write watch, parent `80780` | Audit key `soc_lab_cron_change` | Live cron modification alert, including negative control |
 | [`100104`](100104-soc-lab-correlation.xml) | 10 | Prior `100102` and current `100103`, matching `audit.auid` within 120 s | User discovery followed by cron change | **Positive live correlation + negative control passed** |
+| [`100105`](100105-soc-lab-identity.xml) | 8 | Auditd account database write/attribute changes, parent `80780` | Audit key `soc_lab_identity_change` | **Creation + read-only negative control + deletion passed** |
 
 ### Rule 100100 — Sensitive configuration change
 
@@ -42,14 +43,25 @@ The repository contains **only the custom rules authored for the lab**, not Wazu
 
 See the [DE-003 correlation case study](DE-003-user-discovery-cron-correlation.md) for the sequence, relevant auditd watch configuration, timestamps, exact paths, assumptions, and limitations. The new XML files are transcriptions from manager console output. Two [cropped terminal evidence images](../evidence/README.md) for the DE-003 positive and negative controls are now archived in the repository.
 
+### Rule 100105 — Account database change monitoring (DE-004)
+
+- **What is monitored:** `/etc/passwd`, `/etc/shadow`, `/etc/group`, and `/etc/gshadow` with auditd `-p wa` and key `soc_lab_identity_change`.
+- **What the rule means:** Level 8 **account-database modification**, not proof of a newly created account or malicious privilege escalation. The manager's audit-key list includes `soc_lab_identity_change:write`.
+- **Positive (2026-10-30):** Controlled creation of locked, `nologin` test account `soclab_test` produced **8 Level 8 alerts** for `/usr/sbin/useradd`, at **09:42:25.562–09:42:25.583 UTC**.
+- **Negative:** Read-only `getent`, `id` and `passwd -S` checks produced **zero new rule 100105 alerts** relative to a recorded baseline.
+- **Deletion/cleanup:** `sudo userdel soclab_test` produced **8 Level 8 alerts** for `/usr/sbin/userdel`, at **09:44:49.573–09:44:49.594 UTC**. Independent checks confirmed that both the test account and group were gone.
+- **Pending:** Persistence of the audit watches across restart/reboot has **not** been verified. Visual evidence from the new test has **not** been committed yet.
+
+Read the [DE-004 account lifecycle case study](DE-004-linux-account-lifecycle.md) for the evidence trail, safeguards, and limitations.
+
 ## Installation on a Wazuh manager
 
 For an appropriately isolated practice environment, copy the XML files to `/var/ossec/etc/rules/`, assign the manager's `wazuh:wazuh` ownership and restrictive permissions, validate, then restart the manager to load changes:
 
 ```bash
 # After copying the repository XML into /var/ossec/etc/rules/:
-sudo chown wazuh:wazuh /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[234]-soc-lab-*.xml
-sudo chmod 640 /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[234]-soc-lab-*.xml
+sudo chown wazuh:wazuh /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[2345]-soc-lab-*.xml
+sudo chmod 640 /var/ossec/etc/rules/soc_lab_*_rules.xml /var/ossec/etc/rules/10010[2345]-soc-lab-*.xml
 sudo /var/ossec/bin/wazuh-analysisd -t
 # Restart only after the configuration test passes:
 sudo systemctl restart wazuh-manager
@@ -99,6 +111,7 @@ The FIM negative-control result (two normal events and zero matches for rule 100
 - Rule 100100 also triggers on authorized recovery: analyst context matters.
 - No automatic containment was configured for the custom rules in this repository.
 - Rule 100102 only detects the specifically watched `/usr/bin/id` executable; rule 100103 depends on configured auditd cron watches and decoding; rule 100104's common `audit.auid` is not proof of malicious intent. A benign administrator can trigger the same sequence.
+- Rule 100105 can raise several alerts for a single account operation (including `/etc/` parent entries). The audit key does not encode the affected username or the intent behind the change.
 - Expand testing to alternate command formats, permissions, false positives and alert-volume tuning before treating these as production-quality detections.
 
 See [IR-001](../incident-reports/IR-001-configuration-tampering.md) for an investigation driven by rule 100100.
