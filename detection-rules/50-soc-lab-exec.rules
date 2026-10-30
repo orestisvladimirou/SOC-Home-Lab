@@ -1,0 +1,2 @@
+# SOC Lab - track use of the id discovery command
+-w /usr/bin/id -p x -k soc_lab_exec_test
