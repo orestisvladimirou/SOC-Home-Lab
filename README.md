@@ -1,222 +1,80 @@
-# SOC Home Lab — Wazuh SIEM, Detection Engineering & Incident Response
+# SOC Home Lab — Wazuh detection engineering and incident response
 
-**SOC Home Lab v1.0 — completed hands-on portfolio project (30 October 2026)** | Windows Hyper-V · Ubuntu Server 24.04.5 LTS · Wazuh 4.14.9 · Linux security monitoring
+**Personal cybersecurity project · v1.0 completed October 2026 · Wazuh 4.14.9 · Ubuntu 24.04.5 · Windows Hyper-V**
 
-This lab demonstrates how I deployed a small security monitoring environment, investigated generated alerts, wrote and tested custom Wazuh detection rules, hardened an Ubuntu endpoint against CIS benchmark checks and carried out two documented incident-response exercises.
+I built this lab to practise the work behind a security alert: collecting useful logs, writing detections, checking whether they fire for the right reasons, and documenting what happened. Rather than relying on screenshots of a dashboard alone, I kept the rule definitions, test results, investigation notes and recovery evidence together.
 
-> **Scope:** All attack simulations and configuration changes were authorized activities in an isolated-purpose home lab. No real-world compromise or malicious actor is claimed. Work is ongoing.
+The main exercises are complete. There are still separate follow-up items for vulnerability remediation and making the repository suitable for public release.
 
-## Highlights — verified in the lab
-
-| Workstream | Verified result | Details |
-| --- | --- | --- |
-| SIEM deployment | Wazuh manager, indexer, dashboard, Filebeat and Ubuntu agent operating | [Architecture](architecture/README.md) |
-| Endpoint monitoring | Real-time file creation, modification and deletion alerts; SSH and `sudo` journal monitoring | [Detections](detection-rules/README.md) |
-| Authentication investigation | Repeated test SSH failures detected by Wazuh's built-in brute-force rule `5763` | [Architecture](architecture/README.md) |
-| Custom detection 1 | **Rule 100100**: Level 10 sensitive-file change; positive and negative live tests passed | [XML](detection-rules/soc_lab_fim_rules.xml) |
-| Custom detection 2 | **Rule 100101**: Level 8 privileged command referencing `/etc/shadow`; positive and negative tests passed | [XML](detection-rules/soc_lab_sudo_rules.xml) |
-| Auditd execution and cron monitoring | **Rules 100102–100103**: Level 5 `/usr/bin/id` discovery and Level 8 cron configuration activity observed on `soc-endpoint` | [Detection catalog](detection-rules/README.md) |
-| Multi-stage detection — DE-003 | **Rule 100104**: Level 10 discovery-to-cron correlation; positive and negative live controls passed | [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md) |
-| Account lifecycle monitoring — DE-004 | **Rule 100105**: Level 8 account-database change; controlled account creation, read-only negative control, and deletion passed | [DE-004](detection-rules/DE-004-linux-account-lifecycle.md) |
-| Sudoers change monitoring — DE-005 | **Rule 100106**: Level 9 sudoers directory change; positive, read-only negative and deletion controls passed | [DE-005](detection-rules/DE-005-sudoers-configuration-monitoring.md) |
-| SSH hardening | **20/20 passing SSH-related** CIS Ubuntu 24.04 checks (not the overall CIS score) | [Hardening notes](security-hardening/README.md) |
-| Incident response — IR-001 | **IR-001:** simulated configuration tampering, correlated `sudo` activity and hash-verified recovery | [IR-001](incident-reports/IR-001-configuration-tampering.md) |
-| Multi-alert investigation — IR-002 | **IR-002:** correlated Level 8 and Level 10 alerts 8.7 seconds apart, cross-checked against `sudo` journal events, and verified recovery | [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
-| Browser TLS | Dashboard HTTPS certificate corrected for lab IP, verified and trusted on Windows | [Hardening notes](security-hardening/README.md) |
-| Wazuh server firewall hardening | Restricted SSH/dashboard to Windows and agent ports to monitored endpoint; verified API 55000 blocked from Windows and all services operational | [UFW assessment](security-hardening/wazuh-server-firewall.md) |
-| Vulnerability management — VM-001 | Assessed 101 Critical and 862 High active-kernel inventory records; investigated two RDMA CVEs and verified reversible modprobe mitigation; fixes remain outstanding | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) |
-| Vulnerability management — VM-002 | Wazuh server kernel and security-update policy assessed; controlled `hello` install/removal and inventory deletion verified; historical 717-package indexing gap remains | [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) |
-
-## Architecture at a glance
+## The lab
 
 ```mermaid
 flowchart LR
-    PC["Windows / Hyper-V host<br/>10.77.77.1"]
-    LAN["SOC-Lab internal switch<br/>10.77.77.0/24"]
-    SIEM["Wazuh all-in-one<br/>10.77.77.10"]
-    END["Ubuntu monitored endpoint<br/>10.77.77.30"]
-    PC --- LAN
-    LAN --- SIEM
-    LAN --- END
-    END -->|"Wazuh agent<br/>FIM + journald + SCA"| SIEM
-    PC -->|"HTTPS dashboard + SSH"| SIEM
+    H["Windows host / Hyper-V<br/>10.77.77.1"]
+    S["Internal SOC-Lab switch<br/>10.77.77.0/24"]
+    W["Wazuh server<br/>10.77.77.10"]
+    E["Ubuntu endpoint<br/>10.77.77.30"]
+    D["Hyper-V Default Switch<br/>Outbound connectivity"]
+    H --- S
+    S --- W
+    S --- E
+    E -->|"Auditd, FIM, SSH / sudo logs"| W
+    H -->|"SSH / HTTPS dashboard"| W
+    W --- D
+    E --- D
 ```
 
-The virtual machines also use the Hyper-V Default Switch for outbound connectivity. See the [full topology, telemetry flow and security boundaries](architecture/README.md).
+The Wazuh VM runs the manager, indexer, dashboard and Filebeat. A separate Ubuntu VM runs the Wazuh agent and generates the test events. The two VMs also have a Hyper-V Default Switch connection for outbound traffic, so this is **not** a fully internet-isolated environment. See [architecture and network boundaries](architecture/README.md).
 
-## Detection engineering
+## Custom detections
 
-### 100100 — Sensitive configuration modification
+I wrote seven Wazuh XML rules. Each was tested against observed lab events; the results below describe what the rules actually detect, not what an attacker necessarily intended.
 
-- Monitors a **specific** file, `/opt/soc-fim-test/critical-config.conf`, through Wazuh FIM.
-- Extends built-in file-modification rule `550` and raises a **Level 10** alert.
-- **Positive control:** change the sensitive test file → custom rule fires.
-- **Negative control:** modify another file in the monitored directory → normal FIM event, no custom alert.
-- Includes **MITRE ATT&CK T1565.001** as context for the simulated behavior.
+| Rule | Level | Detection | Source / investigation |
+| --- | ---: | --- | --- |
+| `100100` | 10 | Modification of a designated test configuration file | [FIM rule](detection-rules/soc_lab_fim_rules.xml) · [IR-001](incident-reports/IR-001-configuration-tampering.md) |
+| `100101` | 8 | A `sudo` command with an argument referencing `/etc/shadow` | [Sudo rule](detection-rules/soc_lab_sudo_rules.xml) · [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
+| `100102` | 5 | Execution of the watched `/usr/bin/id` discovery command | [Discovery rule](detection-rules/100102-soc-lab-exec.xml) |
+| `100103` | 8 | Changes to monitored cron configuration paths | [Cron rule](detection-rules/100103-soc-lab-cron.xml) |
+| `100104` | 10 | User discovery followed by a cron change, matching audit user ID within 120 seconds | [Correlation rule](detection-rules/100104-soc-lab-correlation.xml) · [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md) |
+| `100105` | 8 | Writes to Linux account databases | [Identity rule](detection-rules/100105-soc-lab-identity.xml) · [DE-004](detection-rules/DE-004-linux-account-lifecycle.md) |
+| `100106` | 9 | Writes under the monitored sudoers configuration paths | [Sudoers rule](detection-rules/100106-soc-lab-sudoers.xml) · [DE-005](detection-rules/DE-005-sudoers-configuration-monitoring.md) |
 
-### 100101 — Privileged authentication-file reference
+The full [detection catalog](detection-rules/README.md) includes how the rules work, their audit keys and the testing approach. Account-database and sudoers writes are **change signals**; they do not independently prove that a new privilege was granted or that activity was malicious.
 
-- Inspects decoded `sudo` `command` fields for arguments referencing `/etc/shadow`.
-- Works with parent rules `5402` and `5403`; the second was identified during log-testing and added before deployment.
-- **Positive control:** `sudo stat /etc/shadow` → custom **Level 8** alert.
-- **Negative control:** `sudo stat /etc/hosts` → ordinary `sudo` alert.
-- The positive command reads **metadata only**, not password hashes.
+## What I investigated
 
-### 100102–100104 — Auditd discovery-to-cron correlation (DE-003)
+- **[DE-003 — Discovery followed by cron activity](detection-rules/DE-003-user-discovery-cron-correlation.md):** A controlled sequence generated a Level 10 multi-stage alert. In the negative control, an isolated cron write after the correlation window raised the cron alert without raising the correlation alert. The test file contained no scheduled task.
+- **[DE-004 — Linux account lifecycle](detection-rules/DE-004-linux-account-lifecycle.md):** Creating and deleting a locked, non-login test account each produced eight Level 8 filesystem alerts. Read-only account lookups produced no new matching alerts. The test account and group were removed.
+- **[DE-005 — Sudoers configuration monitoring](detection-rules/DE-005-sudoers-configuration-monitoring.md):** A comment-only, ignored file in `/etc/sudoers.d` produced one Level 9 alert on creation and another on deletion. Read-only checks produced zero new matching alerts, and `visudo -c` passed after cleanup.
+- **[IR-001 — Configuration tampering](incident-reports/IR-001-configuration-tampering.md):** Investigated a Wazuh FIM alert, checked related `sudo` activity, restored the test file and confirmed its known-good SHA-256.
+- **[IR-002 — Correlated privileged activity](incident-reports/IR-002-correlated-privileged-activity.md):** Reconstructed a sequence of Level 8 `sudo` and Level 10 FIM alerts, corroborated the commands in the Ubuntu journal and documented why isolating the endpoint would not have been appropriate for the authorized test.
 
-- **100102:** Level 5 detection of watched `/usr/bin/id` execution (`soc_lab_exec_test` audit key).
-- **100103:** Level 8 detection of watched cron configuration writes (`soc_lab_cron_change` audit key).
-- **100104:** Level 10 correlation of identity discovery and later cron modification, matching `audit.auid` inside a 120-second window.
-- **Positive control (30 October 2026):** Harmless comment-only cron file creation following `/usr/bin/id` produced indexed `100104` at **09:04:41.425 UTC** on agent `001`.
-- **Negative control:** A standalone cron modification after **326 seconds** without fresh discovery produced **one `100103`** and **zero `100104`** alerts. The check reported `NEGATIVE CONTROL PASSED`.
-- **Cleanup:** Both temporary `.disabled` test files were removed. No scheduled task was installed.
+For the auditd exercises, I saved the rules under `/etc/audit/rules.d/`. After a controlled endpoint reboot, **all ten lab watches** were present, `auditd` and the Wazuh agent were active, and the audit subsystem reported **zero lost records**. The [identity](detection-rules/70-soc-lab-identity.rules) and [sudoers](detection-rules/80-soc-lab-sudoers.rules) configuration files are included in the repository.
 
-The [DE-003 test report](detection-rules/DE-003-user-discovery-cron-correlation.md) documents alert evidence, exact test targets and limitations. This detects **suspicious combinations**, not confirmed malicious persistence. Sanitized DE-003 terminal excerpts are archived in the evidence gallery.
+## Hardening and vulnerability triage
 
-See [all rule source files, implementation notes, test results and limitations](detection-rules/README.md).
+- **[SSH and CIS assessment](security-hardening/README.md):** Configured key-only SSH access, disabled root/password login, restricted inbound SSH with UFW and validated **20 of 20 SSH-filtered CIS checks**. This is not a claim of full CIS compliance; an earlier overall assessment showed **51%**.
+- **[Wazuh server firewall](security-hardening/wazuh-server-firewall.md):** Limited management access and agent ports to known lab peers. Verified that the dashboard and agent remained operational and that the manager API was not reachable from the Windows host over the tested path.
+- **[VM-001 — Kernel RDMA findings](vulnerability-management/VM-001-rdma-kernel-exposure.md):** Investigated selected Ubuntu kernel vulnerability records and added a reversible restriction for unused RDMA modules. This reduced exposure for the assessed paths; it **did not patch the kernel**.
+- **[VM-002 — Wazuh server assessment](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md):** Examined server vulnerability results, update policy and an inventory indexing discrepancy. A diagnostic package was removed and verified absent, but the older **717-package historical indexing gap remains unresolved**.
 
-### 100105 — Linux account database changes (DE-004)
+## Evidence and repository guide
 
-- Monitors auditd write/attribute activity affecting `/etc/passwd`, `/etc/shadow`, `/etc/group`, and `/etc/gshadow` (audit key `soc_lab_identity_change`).
-- **Creation:** A password-locked, non-login test account generated **eight Level 8** modification alerts; command attribution showed `/usr/sbin/useradd`.
-- **Read-only negative control:** `getent`, `id`, and `passwd -S` produced **zero new Level 8** modification alerts against the saved baseline.
-- **Deletion:** `userdel` generated **eight Level 8** modification alerts, and the test account and group were independently verified absent.
-- **Limitation:** The rule detects file activity, not a definitive account-creation or privilege-escalation event. The persistent audit configuration was **reloaded and verified after one endpoint reboot**; all eight watches and agent connectivity were restored. Three original cropped terminal evidence screenshots have been archived.
+The [evidence gallery](evidence/README.md) contains **14 cropped screenshots** from the controlled exercises, including positive detections, negative controls and recovery checks. Some later investigations have written evidence but not standalone screenshots in the repository; those gaps are identified in their reports.
 
-See the [DE-004 evidence-based case study](detection-rules/DE-004-linux-account-lifecycle.md).
-
-### 100106 — Sudoers configuration monitoring (DE-005)
-
-- **Watches:** `/etc/sudoers` and `/etc/sudoers.d`, via [persistent auditd watch file](detection-rules/80-soc-lab-sudoers.rules), rule [100106](detection-rules/100106-soc-lab-sudoers.xml) (Level 9).
-- **Positive:** Harmless, ignored comment-only `.disabled` file write → **one Level 9** alert at 10:14:20.656 UTC.
-- **Negative:** Read-only `cat`, `stat` and `visudo -c` → **zero new rule 100106** alerts.
-- **Cleanup:** Temporary file removed, independent `rm` detection at 10:16:20.662 UTC; existing sudo configuration parsed OK.
-- **Limitations:** Detection proves a monitored *filesystem write*, **not** privilege escalation. All ten watches were active after loading; **all ten audit watches were verified after reboot**, with Wazuh agent online and sudo configuration valid.
-
-See the [DE-005 verified case study and evidence](detection-rules/DE-005-sudoers-configuration-monitoring.md).
-
-## Incident response case study
-
-**[IR-001 — Simulated configuration file tampering](incident-reports/IR-001-configuration-tampering.md)**
-
-A harmless test configuration changed from `security_mode=normal` to `security_mode=disabled`. Wazuh rule `100100` generated a Level 10 alert. Investigation correlated the file-integrity event with Ubuntu `sudo` journal entries and identified the authorized test account and operation. The file was restored, then independently verified using the known-good SHA-256 hash and a recovery FIM alert.
-
-The case documents **alert triage, timeline reconstruction, evidence correlation, a justified containment decision and recovery**. It is an **authorized simulation**, not an actual breach.
-
-### IR-002 — Correlated privileged activity and configuration tampering
-
-**[IR-002 — Multi-alert investigation and recovery](incident-reports/IR-002-correlated-privileged-activity.md)**
-
-A controlled sequence produced a **Level 8** alert for a privileged command referencing `/etc/shadow`, followed **8.702 seconds** later by a **Level 10** FIM alert for changes to a harmless test configuration. The recovery alert independently verified that the file's SHA-256 returned to its known-good value. The incident report correlates the alerts with endpoint `sudo` journal entries identifying the account and command execution, records a justified **no-isolation** decision for this authorized simulation, and verifies recovery using the known-good SHA-256.
-
-## Vulnerability management — VM-001
-
-**[VM-001 — Linux kernel RDMA vulnerability assessment and temporary mitigation](vulnerability-management/VM-001-rdma-kernel-exposure.md)**
-
-Wazuh identified **101 Critical** and **862 High** vulnerability inventory records against the **currently running** `6.8.0-147-generic` kernel. The assessment checked the package state against APT, examined the availability and runtime loading status of the `siw` and `rtrs-server` RDMA modules, and documented the two selected CVEs against official Ubuntu advisories. With no relevant kernel upgrade offered by configured repositories, the lab added a reversible `modprobe` restriction for these **unused modules**. Dry-run output and `lsmod` verified the control's expected behavior and that the targeted modules remain unloaded.
-
-**This is an exposure-reduction measure, not a patch or proof that all reported vulnerabilities are resolved.**
-
-## Wazuh server vulnerability assessment — VM-002
-
-**[VM-002 — Wazuh server vulnerability, inventory synchronization and patch-policy investigation](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md)**
-
-The manager itself was added to vulnerability detection as agent `000`. Wazuh recorded **7,266 kernel-related vulnerability documents**, of which **2,982** pertained to its running `6.8.0-147-generic` image. Five sampled Critical CVEs were assessed against the VM's observed loaded modules, mounts, kernel configuration and services. Unused RDMA/Ceph/handshake components showed reduced apparent exposure, but kernel CVEs were **not** considered patched or ruled out.
-
-An inventory-publishing limitation was independently reproduced: the manager's local source and management databases held **718 packages** after a harmless `hello` diagnostic install, but the package index held **only that one newly changed package**; its historical packages remained absent. **The diagnostic package's removal is now verified**: the indexer returned zero `hello` records, and both databases returned **717 packages / zero `hello`** after the 13:10 UTC Syscollector scan. The 717-package historical indexing gap remains open.
-
-Ubuntu unattended security updating and both APT maintenance timers were enabled. The inspected configuration had no explicit automatic-reboot override; Ubuntu's documented default is off, though package updates may still restart affected services. See VM-002 for the full evidence trail, limitations and follow-up.
-
-## Endpoint hardening
-
-The lab endpoint uses key-based SSH access, disabled SSH passwords and root login, a restricted SSH allow-list, limited MAC algorithms and connection settings, an authorized-use banner and disabled forwarding. UFW restricts inbound SSH on the internal lab interface to the Windows host.
-
-After testing, Wazuh displayed **20/20 passing SSH-specific CIS checks**. An earlier **overall** CIS scan was only **51%**, so the SSH subset result must not be mistaken for full system compliance. See [security-hardening notes](security-hardening/README.md).
-
-## Wazuh server network exposure reduction
-
-The Wazuh server originally had **UFW inactive** and management listeners including 22, 443, and 55000/TCP on network-facing addresses. UFW was enabled with an **inbound deny** policy and four host- and interface-limited exceptions for Windows SSH/dashboard access and Ubuntu endpoint agent transport/enrollment. The existing Wazuh agent, four Wazuh services, dashboard and Windows SSH connectivity were all verified afterwards. A Windows-origin negative-control connection to the API on **55000/TCP** failed as intended.
-
-See the [Wazuh server UFW assessment](security-hardening/wazuh-server-firewall.md). The control reduces network exposure but does not remediate Wazuh software CVEs. Subsequent IPv6 inspection confirmed `IPV6=yes`, default `INPUT DROP`, no custom IPv6 inbound allow rules, and link-local-only interface addresses. Independent Default Switch reachability testing and external IPv6 connection tests remain open.
-
-## Selected visual evidence
-
-These are sanitized, cropped screenshots of **real controlled lab test results**, with no new events fabricated:
-
-- [Wazuh CIS SSH assessment — 20/20 passing checks](evidence/ssh-cis-20-of-20.png)
-- [Custom FIM rule 100100 — Level 10 positive detection](evidence/fim-custom-positive.png)
-- [Custom sudo rule 100101 — Level 8 positive detection](evidence/sudo-custom-positive.png)
-- [Custom sudo negative control — normal Level 3 event](evidence/sudo-custom-negative.png)
-- [DE-003 multi-stage positive — rule 100104 Level 10 manager JSON excerpt](evidence/de003-positive-terminal.png)
-- [DE-003 negative control — one 100103, zero 100104](evidence/de003-negative-terminal.png)
-- [DE-004 account creation — eight Level 8 rule 100105 alerts](evidence/de004-account-creation.png)
-- [DE-004 negative control — zero new alerts](evidence/de004-readonly-negative.png)
-- [DE-004 account deletion — detected modification events](evidence/de004-account-deletion.png)
-- [DE-005 sudoers change — Level 9 positive detection](evidence/de005-sudoers-positive.png)
-- [DE-005 read-only negative — zero new alerts](evidence/de005-sudoers-negative.png)
-- [DE-005 cleanup — Level 9 deletion detection](evidence/de005-sudoers-cleanup.png)
-- [IR-001 recovery alert and restored hash](evidence/ir001-recovery.png)
-- [IR-001 terminal verification of known-good value](evidence/ir001-terminal-hash.png)
-
-See the [evidence gallery and context notes](evidence/README.md) for all fourteen images.
-
-## Repository guide
-
-| Folder | Contents |
+| Directory | Contents |
 | --- | --- |
-| [`architecture/`](architecture/README.md) | Logical topology, host roles, network and monitoring flow |
-| [`detection-rules/`](detection-rules/README.md) | Seven custom XML rules (100100–100106), [DE-003](detection-rules/DE-003-user-discovery-cron-correlation.md), [DE-004](detection-rules/DE-004-linux-account-lifecycle.md), [DE-005](detection-rules/DE-005-sudoers-configuration-monitoring.md), and limitations |
-| [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | Incident reports [IR-001](incident-reports/IR-001-configuration-tampering.md) and [IR-002](incident-reports/IR-002-correlated-privileged-activity.md) |
-| [`security-hardening/`](security-hardening/README.md) | SSH/CIS, TLS, and [Wazuh server UFW](security-hardening/wazuh-server-firewall.md) assessments |
-| [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | [VM-001](vulnerability-management/VM-001-rdma-kernel-exposure.md) endpoint RDMA mitigation and [VM-002](vulnerability-management/VM-002-wazuh-server-vulnerability-assessment.md) server inventory/CVE/patch-policy assessment |
-| [`evidence/`](evidence/README.md) | Fourteen sanitized screenshots/excerpts and documentation of evidence limitations |
-| [`.gitignore`](.gitignore) | Exclusion rules for common secrets, captures and virtual disks |
+| [`architecture/`](architecture/README.md) | Topology, components and telemetry flow |
+| [`detection-rules/`](detection-rules/README.md) | Seven XML rules, auditd configurations and DE-003–005 reports |
+| [`incident-reports/`](incident-reports/IR-001-configuration-tampering.md) | IR-001 and IR-002 |
+| [`security-hardening/`](security-hardening/README.md) | SSH, CIS, HTTPS and firewall work |
+| [`vulnerability-management/`](vulnerability-management/VM-001-rdma-kernel-exposure.md) | VM-001 and VM-002 |
+| [`evidence/`](evidence/README.md) | Test screenshots and interpretation notes |
+| [`portfolio/`](portfolio/RELEASE-REVIEW.md) | [Publication review](portfolio/RELEASE-REVIEW.md) and [CV entry](portfolio/CV-ENTRY.md) |
 
-## Safety and limitations
+## Limits and next steps
 
-- All experiments were performed on personally controlled VMs and **test files**, not production infrastructure.
-- Rule matches raise investigative signals, not proof of malicious intent. The custom detections have **limited** scope and require further tuning before production use.
-- No SSH keys, CA private keys, passwords, tokens or VM disk images are included in the repository.
-- Reviewed, cropped screenshots are included in the [evidence gallery](evidence/README.md).
-- Wazuh's CIS score and vulnerability counts are assessment outputs, not a substitute for manual risk assessment or evidence of exploitable compromise.
+All security events were generated in an **authorized home lab**, not during a real intrusion. The custom rules have deliberately narrow coverage, and a positive alert is not proof of exploitation. Vulnerability findings need advisory-level validation; several mitigations and inventory issues remain open. The cases are intended to show how I tested and investigated them, not to imply production readiness.
 
-## Portfolio status and publication review
-
-The core build and detection-engineering tests for **v1.0 are complete**. See the [final portfolio and publication review](portfolio/RELEASE-REVIEW.md) for verified outcomes, link checks, privacy findings, and an explicit public-release approval gate. The [CV-ready project entry](portfolio/CV-ENTRY.md) summarizes the work for SOC analyst applications.
-
-**Repository visibility: Private.** A personal Gmail address appears in historical Git author metadata; the owner should review history, evidence images, and intended network disclosures before making it public. No public visibility change was made. Outstanding vulnerability remediation, package indexing, and some extra screenshots remain optional follow-up work, **not completed outcomes**.
-
-## Optional follow-up backlog
-
-- [x] Build the Hyper-V lab and integrate Wazuh agent telemetry.
-- [x] Reproduce and investigate SSH authentication failures and file-integrity changes.
-- [x] Create and validate the initial **two** custom detections (100100, 100101) with positive and negative controls.
-- [x] Add auditd rules 100102 and 100103 and live-test multi-stage rule 100104 with positive and negative controls.
-- [x] Verify rule 100105 account-database modifications using locked-user creation, read-only negative control, and deletion.
-- [x] Validate rule 100106 sudoers write monitoring with positive, read-only negative, and cleanup detections.
-- [x] Archive three cropped DE-005 positive/negative/cleanup terminal screenshots.
-- [x] Verify the two new sudoers audit watches survive a controlled endpoint reboot; all ten watches active, auditd/agent active, sudo config valid, audit lost 0.
-- [x] Install identity watches in a persistent auditd `.rules` file and reload; verify all eight active watches and zero lost events.
-- [x] Verify all eight audit watches remain active after a controlled endpoint reboot; both services and Wazuh agent `001` active, lost audit events `0`.
-- [x] Archive reviewed DE-004 creation, read-only negative-control and deletion terminal screenshots.
-- [x] Archive cropped, sanitized DE-003 correlation positive/negative terminal screenshots in the evidence gallery.
-- [x] Verify all **20 SSH-related** CIS controls in the displayed subset.
-- [x] Complete a documented configuration-tampering incident response exercise.
-- [x] Add reviewed, sanitized screenshots of detections, SSH controls and incident recovery.
-- [x] Complete IR-002 multi-alert correlation, command-level `sudo` log corroboration, and hash-verified recovery.
-- [x] Document incident-specific IR-002 `sudo` log evidence in the incident report.
-- [ ] Add selected sanitized IR-002 screenshots to the evidence gallery.
-- [ ] Export an additional standalone network diagram.
-- [x] Investigate two selected RDMA CVEs, validate the current kernel and document VM-001 exposure mitigation.
-- [ ] Reassess VM-001 when relevant Ubuntu security patches become available and attach sanitized screenshots.
-- [x] Restrict Wazuh server exposure using UFW and verify management, agent, dashboard and API negative-control behavior.
-- [x] Verify server IPv6 UFW policy, empty IPv6 user-allow chain, and link-local address scope.
-- [x] Assess Wazuh server kernel-CVE exposure, unattended-update policy, and investigate local-to-indexer package mismatch (VM-002).
-- [x] Verify `hello` removal reaches Wazuh inventories after the next scheduled package scan (index 0; both local databases 717 / `hello`=0).
-- [ ] Resolve/backfill missing manager historical package index records when a safe supported method is established.
-- [ ] Independently test Default Switch and IPv6 management-port reachability.
-- [ ] Reassess overall CIS controls, record accepted risks and publish portfolio-ready evidence.
-
----
-
-**Project status:** **SOC Home Lab v1.0 complete as a portfolio project.** Additional hardening, vulnerability remediation, screenshot archiving and history-aware publication review remain separate follow-up tasks. Repository remains private pending explicit owner approval.
+**Project status:** v1.0 is complete as a hands-on portfolio exercise. The repository remains **private** while publication privacy checks are outstanding. The [release review](portfolio/RELEASE-REVIEW.md) records remaining technical items, Git-history disclosure risks and the approval steps for any future public release.
